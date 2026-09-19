@@ -61,6 +61,11 @@ CREATE TABLE IF NOT EXISTS corpus_coverage (
     volume     TEXT NOT NULL,
     source     TEXT NOT NULL,
     case_count INTEGER NOT NULL DEFAULT 0,
+    -- 1 only when the whole volume was loaded, which the loader cannot infer
+    -- and the operator must assert. Holding one case from volume 42 says
+    -- nothing about whether 42 F.3d 988 exists; holding all of volume 42 says
+    -- everything. Absence is only reportable when this is set.
+    complete   INTEGER NOT NULL DEFAULT 0,
     loaded_at  TEXT NOT NULL DEFAULT (datetime('now')),
     PRIMARY KEY (reporter, volume)
 );

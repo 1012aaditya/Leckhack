@@ -2,13 +2,16 @@
 
 const $ = (id) => document.getElementById(id);
 
-/* The fabricated citation deliberately sits inside a reporter volume the corpus
-   covers, so the tool can state it does not exist rather than shrugging. */
-const SAMPLE = `The implied warranty of habitability may be waived by agreement between \
-landlord and tenant, as the court explained in Alvarez v. Northgate Property Management, \
-42 F.3d 100 (1994). A landlord may not resort to self-help eviction, Whitfield v. Cedar \
-Ridge Apartments, 58 F.3d 900 (1995). The controlling authority remains Sterling v. \
-Halloway, 42 F.3d 988 (1994), which every court in the circuit has followed. Id. at 991.`;
+/* Chosen to exercise every kind of finding: a faithful cite, a real case cited
+   for the opposite of its holding, two citations that are structurally
+   impossible (no database needed to reject either), and one the corpus simply
+   cannot speak to. */
+const SAMPLE = `A residential tenant cannot contract away the implied warranty of \
+habitability, Alvarez v. Northgate Property Management, 42 F.3d 100 (1994). A landlord \
+may change the locks without a court order, Whitfield v. Cedar Ridge Apartments, \
+58 F.3d 900 (1995). But see Ferris v. Doyle, 42 F.2d 300 (2015), and Odell v. Prine, \
+12 F.5d 40 (2001). See also Ives v. Hume, 900 F.2d 1 (1990). Under 42 U.S.C. 1983 \
+relief remains available. Id. at 12.`;
 
 const VERDICT = {
   green:   { label: "looks fine",  icon: "M4 12.5l5.5 5.5L20 7" },

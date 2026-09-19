@@ -127,11 +127,29 @@ def test_malformed_lines_are_skipped_not_fatal(tmp_path):
 
 
 def test_load_records_coverage_and_text(db):
-    stats = load_cases(db, iter_records(SAMPLE))
+    stats = load_cases(db, iter_records(SAMPLE), complete_volumes=True)
     assert stats.loaded == 3
     assert db.covers("F.3d", "42")
     assert not db.covers("F.2d", "900")
     assert "implied warranty" in db.get_opinion("42 F.3d 100").text
+
+
+def test_partial_load_is_not_treated_as_complete(db):
+    """Holding part of a volume proves nothing about the rest of it.
+
+    record_coverage fires for any volume with at least one case, so without an
+    explicit assertion of completeness the auditor would call real cases
+    fabricated purely because they were not in the slice downloaded.
+    """
+    load_cases(db, iter_records(SAMPLE))
+    assert db.has_volume("F.3d", "42")
+    assert not db.covers("F.3d", "42")
+
+
+def test_completeness_survives_a_later_partial_load(db):
+    load_cases(db, iter_records(SAMPLE), complete_volumes=True)
+    load_cases(db, iter_records(SAMPLE))
+    assert db.covers("F.3d", "42")
 
 
 def test_loaded_cases_are_not_marked_synthetic(db):

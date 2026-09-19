@@ -48,7 +48,15 @@ class ExtractedCitation(BaseModel):
     volume: str | None = None
     reporter: str | None = None
     page: str | None = None
-    year: str | None = None
+    year: str | None = Field(
+        default=None,
+        description="Year read from the parenthetical right after the citation.",
+    )
+    reported_year: str | None = Field(
+        default=None,
+        description="Year eyecite attributed. Kept for transparency; not acted on, "
+                    "because it can be inherited from a neighbouring citation.",
+    )
     court: str | None = None
     plaintiff: str | None = None
     defendant: str | None = None
@@ -101,6 +109,9 @@ class CitationReport(BaseModel):
     matches: list[CaseMatch] = Field(default_factory=list)
     # Typed as dict rather than the concrete models to keep this module free of
     # imports from judge/goodlaw, which would be circular.
+    plausibility: dict | None = Field(
+        default=None, description="Structural check: could this citation exist at all?"
+    )
     support: dict | None = Field(default=None, description="Stage 2 finding, if run.")
     good_law: dict | None = Field(default=None, description="Stage 3 report, if run.")
     verdict: Verdict = Verdict.UNKNOWN

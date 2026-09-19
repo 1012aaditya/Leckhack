@@ -27,21 +27,42 @@ python scripts/eval_run.py         # precision/recall against labelled cases
 pytest                             # 84 tests
 ```
 
-## The three stages
+## The four stages
 
-| Stage | Question | Where |
-|---|---|---|
-| 1 | Does this case exist? | `app/sources/` |
-| 2 | Does the opinion actually support the claim? | `app/retrieval.py`, `app/judge.py` |
-| 3 | Has a later case overruled it? | `app/goodlaw.py` |
+| Stage | Question | Where | Needs |
+|---|---|---|---|
+| 0 | *Could* this citation exist at all? | `app/plausibility.py` | nothing |
+| 1 | Does this case exist? | `app/sources/` | a database |
+| 2 | Does the opinion support the claim? | `app/retrieval.py`, `app/judge.py` | opinion text |
+| 3 | Has a later case overruled it? | `app/goodlaw.py` | a citation graph |
 
-Stage 1 alone is a working product — it catches outright fabrication. Stages 2 and 3
-are additive, and the report says plainly when they could not run.
+Stage 0 is the one with no dependencies at all. Legal citations are not arbitrary
+strings: reporters publish over known date ranges, volumes fill in order, pages are
+bounded. Those constraints make some citations self-contradicting regardless of what
+any database holds.
+
+```
+42 F.2d 300 (2015)   F.2d stopped publishing in 1993
+58 F.3d 900 (1985)   F.3d did not begin until 1993
+12 F.5d 40           no such reporter has ever been published
+```
+
+None of those needs a lookup, a model, or a network connection to reject. It matters
+for two reasons beyond novelty. It **covers what the corpus cannot** — a partial corpus
+must stay silent about reporters it never loaded, but a structural contradiction is
+decidable for every one of the 1,342 reporter editions in `reporters-db`. And it is
+**explainable**: "F.3d began publishing in 1993" is a reason a lawyer can check in
+seconds, unlike a similarity score.
+
+It also closes a blind spot in the parser itself. eyecite discards citations whose
+reporter it does not recognise — correct for a parser, a gap for a fabrication
+detector, since an AI that invents the reporter as well as the case would otherwise
+draw no comment at all. Those are scanned for separately and reported.
 
 ## Four rules the code enforces
 
-**No model decides whether a case exists.** Stage 1 is a database lookup with nothing
-else in the path. Existence is a fact, not a judgement. A test pins the reason: eyecite
+**No model decides whether a case exists.** Stages 0 and 1 have no model in them at
+all — stage 0 is arithmetic over publication dates, stage 1 is a database lookup. Existence is a fact, not a judgement. A test pins the reason: eyecite
 accepts the fabricated `999 U.S. 1234` without complaint, because the *format* is valid.
 Only the lookup exposes it.
 
@@ -51,10 +72,12 @@ whitespace variants, never dropping words. A finding whose quote fails is downgr
 `unclear` and the quote discarded. `tests/test_judge.py` runs a deliberately fabricating
 judge through the pipeline to prove it gets blocked.
 
-**A non-authoritative source may never call a case fake.** The offline corpus missing a
-citation means "not in our sample", not "fabricated". `CaseLawSource.is_authoritative`
-carries this and the pipeline checks it before showing a red light. A database outage is
-reported as unchecked, never as fabrication.
+**Absence is only evidence from a complete volume.** Holding one case from F.3d volume
+42 says nothing about whether `42 F.3d 988` exists; holding *all* of volume 42 says
+everything. The loader cannot infer completeness from an arbitrary slice, so the
+operator asserts it with `--complete-volumes`, and without that assertion a miss is
+reported as unchecked rather than fabricated. A database outage is likewise never
+reported as fabrication.
 
 **The report never claims more than it checked.** "Checked and fine" and "not checked"
 are counted separately, synthetic demo text is labelled as synthetic wherever it appears,
@@ -101,7 +124,8 @@ from a live call — confirm it against reality before trusting it.
 
 ```
 app/
-  extract.py      stage 0  eyecite, offline, no model
+  extract.py      parse    eyecite, offline, no model
+  plausibility.py stage 0  structural checks: no database, no model, no network
   ingest/         loaders  real CAP data and the CourtListener citation graph
   sources/        stage 1  existence: local.py corpus, courtlistener.py live,
                            fixtures.py demo, chain.py ordering

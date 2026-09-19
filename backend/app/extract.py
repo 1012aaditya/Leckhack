@@ -14,8 +14,30 @@ from __future__ import annotations
 
 from eyecite import clean_text, get_citations
 
+import re
+
 from .models import ExtractedCitation
 from .text import sentence_containing
+
+# The year parenthetical that follows a citation: "42 F.3d 100 (1994)".
+# Anchored to the end of the citation span and allowed only a little
+# punctuation in between, so it cannot reach past its own citation.
+_YEAR_AFTER = re.compile(r"^[\s,;]*\((?:[^)]{0,24}\s)?(?P<year>1[6-9]\d{2}|20\d{2})\)")
+
+
+def year_after(cleaned_text: str, start: int, end: int) -> str | None:
+    """The year parenthetical immediately following a citation, if any.
+
+    eyecite's own `year` metadata cannot be relied on here. In text with
+    several citations in a row it can attach a year belonging to a neighbour -
+    observed lagging by one citation - and a wrong year fed to the structural
+    checks produces a false "this cannot be real" against a perfectly good
+    citation. That is the worst error this tool can make, so the year is read
+    positionally from the span instead, and simply absent when there is no
+    parenthetical to read.
+    """
+    match = _YEAR_AFTER.match(cleaned_text[end : end + 40])
+    return match.group("year") if match else None
 
 # eyecite cleaners applied before parsing. `all_whitespace` collapses the
 # ragged spacing that PDF extraction produces, which otherwise hides citations
@@ -97,7 +119,9 @@ def extract_citations(text: str) -> list[ExtractedCitation]:
                 volume=_group(citation, "volume"),
                 reporter=_group(citation, "reporter"),
                 page=_group(citation, "page"),
-                year=_meta(citation, "year"),
+                # Positional, never eyecite's - see year_after().
+                year=year_after(cleaned, start, end),
+                reported_year=_meta(citation, "year"),
                 court=_meta(citation, "court"),
                 plaintiff=_meta(citation, "plaintiff"),
                 defendant=_meta(citation, "defendant"),

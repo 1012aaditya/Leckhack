@@ -11,6 +11,12 @@ from __future__ import annotations
 import asyncio
 
 from .extract import claim_for, extract_citations, prepare_text
+from .plausibility import (
+    PlausibilityChecker,
+    PlausibilityReport,
+    Severity,
+    find_invented_reporters,
+)
 from .goodlaw import GoodLawReport, check_good_law
 from .judge import Judge, Stance, judge_with_guard
 from .models import (
@@ -57,6 +63,9 @@ class Auditor:
         self.store = store
         self.embedder = embedder
         self.judge = judge
+        # Needs no database and no model: it reasons from the structure of the
+        # citation system, and sharpens as the corpus grows.
+        self.plausibility = PlausibilityChecker(store)
 
     @property
     def can_check_support(self) -> bool:
@@ -123,8 +132,15 @@ class Auditor:
         error: str,
         support: dict | None,
         good_law: GoodLawReport | None,
+        plausibility: PlausibilityReport | None = None,
     ) -> tuple[Verdict, str, list[str]]:
         notes: list[str] = []
+
+        # A self-contradicting citation is settled before any database is
+        # consulted, and stays settled whatever the database says - which is
+        # what lets this answer for reporters no corpus covers.
+        if plausibility is not None and plausibility.is_impossible:
+            return Verdict.RED, f"{plausibility.reason} This citation cannot be real.", notes
 
         if error:
             return Verdict.UNKNOWN, f"Could not check this citation: {error}", notes
@@ -208,6 +224,23 @@ class Auditor:
         semaphore = asyncio.Semaphore(MAX_CONCURRENT_LOOKUPS)
 
         async def check(citation: ExtractedCitation) -> CitationReport:
+            plausibility = self.plausibility.check(citation)
+
+            # No point spending a lookup - or a rate limit - on something that
+            # cannot exist.
+            if plausibility.is_impossible:
+                verdict, explanation, _ = self._compose(
+                    citation, None, "", None, None, plausibility
+                )
+                return CitationReport(
+                    citation=citation,
+                    claim=claim_for(cleaned, citation) if citation.is_lookupable else "",
+                    existence=ExistenceStatus.NOT_FOUND,
+                    plausibility=plausibility.as_dict(),
+                    verdict=verdict,
+                    explanation=explanation,
+                )
+
             async with semaphore:
                 result, error = await self._existence(citation)
 
@@ -225,15 +258,18 @@ class Auditor:
                 good_law = await asyncio.to_thread(self._good_law, key)
 
             verdict, explanation, verdict_notes = self._compose(
-                citation, result, error, support, good_law
+                citation, result, error, support, good_law, plausibility
             )
             notes.extend(verdict_notes)
+            if plausibility.severity is Severity.SUSPICIOUS and plausibility.reason:
+                notes.append(plausibility.reason)
 
             return CitationReport(
                 citation=citation,
                 claim=claim,
                 existence=result.status if result else ExistenceStatus.UNCHECKED,
                 matches=result.matches if result else [],
+                plausibility=plausibility.as_dict(),
                 support=support,
                 good_law=good_law.model_dump(mode="json") if good_law else None,
                 verdict=verdict,
@@ -241,8 +277,50 @@ class Auditor:
                 notes=notes,
             )
 
-        reports = await asyncio.gather(*(check(c) for c in citations))
-        return AuditReport.build(list(reports), self.source.name)
+        reports = list(await asyncio.gather(*(check(c) for c in citations)))
+        reports.extend(self._invented_reporter_reports(cleaned, citations))
+        reports.sort(key=lambda r: r.citation.start)
+        return AuditReport.build(reports, self.source.name)
+
+    @staticmethod
+    def _invented_reporter_reports(
+        cleaned: str, citations: list[ExtractedCitation]
+    ) -> list[CitationReport]:
+        """Report citation-shaped strings naming reporters that never existed.
+
+        eyecite discards these, which is right for a parser and a blind spot
+        for a fabrication detector: an AI that invents the reporter as well as
+        the case would otherwise draw no comment at all.
+        """
+        spans = [(c.start, c.end) for c in citations]
+        reports = []
+        for found in find_invented_reporters(cleaned, spans):
+            citation = ExtractedCitation(
+                raw=found.raw,
+                normalized=found.raw,
+                kind="InventedReporter",
+                volume=found.volume,
+                reporter=found.reporter,
+                page=found.page,
+                start=found.start,
+                end=found.end,
+            )
+            reports.append(
+                CitationReport(
+                    citation=citation,
+                    existence=ExistenceStatus.NOT_FOUND,
+                    plausibility={
+                        "severity": Severity.IMPOSSIBLE.value,
+                        "reason": f"'{found.reporter}' is not a reporter that has ever "
+                                  f"been published.",
+                        "findings": [],
+                    },
+                    verdict=Verdict.RED,
+                    explanation=f"'{found.reporter}' is not a real law reporter. "
+                                f"This citation cannot be real.",
+                )
+            )
+        return reports
 
 
 async def audit_text(text: str, source: CaseLawSource, **kwargs) -> AuditReport:

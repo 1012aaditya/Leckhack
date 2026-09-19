@@ -20,9 +20,14 @@ python scripts/eval_run.py        # measured precision/recall
 pytest                            # 84 tests
 ```
 
-**What it does.** Paste in AI-generated legal text. For every case cited it answers three
-questions: does this case exist, does the opinion actually support the claim made about
-it, and has a later case overruled it. Every quote shown is confirmed to appear verbatim
+**What it does.** Paste in AI-generated legal text. For every case cited it answers four
+questions: *could* this citation exist at all, does the case exist, does the opinion
+actually support the claim made about it, and has a later case overruled it.
+
+The first of those needs no database, no model and no network. Reporters publish over
+known date ranges, so `42 F.2d 300 (2015)` is impossible — F.2d ended in 1993 — and
+`12 F.5d 40` names a reporter that has never existed. Those are decidable for all 1,342
+reporter editions in `reporters-db`, including ones we hold no case law for. Every quote shown is confirmed to appear verbatim
 in the source opinion — findings that fail that check are discarded rather than
 displayed.
 

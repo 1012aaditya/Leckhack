@@ -96,6 +96,12 @@ def main() -> int:
                         help="Build the retrieval index as cases load (slower; needed for stage 2).")
     parser.add_argument("--allow-missing-text", action="store_true",
                         help="Import cases with no opinion body. They cannot answer stage 2.")
+    parser.add_argument("--complete-volumes", action="store_true",
+                        help="Assert that every reporter volume in this file was loaded "
+                             "in full. Only then may the auditor report a missing "
+                             "citation as fabricated. CAP bulk files are organised by "
+                             "volume, so this is usually right for them - but it is an "
+                             "assertion you are making, not one the loader can check.")
     parser.add_argument("--synthetic", action="store_true",
                         help="Mark this corpus as invented text (use for the bundled "
                              "format sample). The app then labels it everywhere it appears.")
@@ -135,6 +141,7 @@ def main() -> int:
         reporter_filter=args.reporter,
         require_text=not args.allow_missing_text,
         is_synthetic=args.synthetic,
+        complete_volumes=args.complete_volumes,
         on_case=after_case,
     )
 
@@ -148,13 +155,20 @@ def main() -> int:
     print(f"  {'-' * 60}")
     print("  COVERAGE  (what the auditor may call fabricated)")
     for row in store.coverage_summary():
-        print(f"    {row['reporter']:<12} {row['volumes']:>4} volume(s), "
-              f"{row['cases']:>6} cases   vols {row['first_volume']}–{row['last_volume']}")
-    print(
-        "\n  A citation inside a covered volume that is missing is reported as\n"
-        "  fabricated. Anything outside is reported as unchecked - a partial\n"
-        "  corpus cannot prove a case does not exist.\n"
-    )
+        print(f"    {row['reporter']:<12} {row['volumes']:>4} volume(s) "
+              f"({row['complete_volumes'] or 0} complete), {row['cases']:>6} cases   "
+              f"vols {row['first_volume']}–{row['last_volume']}")
+    if not args.complete_volumes:
+        print(
+            "\n  No volume is marked complete, so a missing citation is reported as\n"
+            "  unchecked rather than fabricated. Pass --complete-volumes if you\n"
+            "  downloaded whole volumes and want absence treated as evidence.\n"
+        )
+    else:
+        print(
+            "\n  Volumes are marked COMPLETE: a citation missing from one is reported\n"
+            "  as fabricated. Anything outside them stays unchecked.\n"
+        )
 
     if not args.index:
         print("  Note: run again with --index, or stage 2 has no passages to search.\n")

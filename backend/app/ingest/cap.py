@@ -296,6 +296,7 @@ def load_cases(
     reporter_filter: str | None = None,
     require_text: bool = True,
     is_synthetic: bool = False,
+    complete_volumes: bool = False,
     on_case=None,
 ) -> LoadStats:
     """Normalise and store CAP records.
@@ -348,6 +349,8 @@ def load_cases(
             on_case(opinion_id, case)
 
     for (reporter, volume), count in volume_counts.items():
-        store.record_coverage(reporter, volume, source, count)
+        store.record_coverage(
+            reporter, volume, source, count, complete=complete_volumes
+        )
 
     return stats

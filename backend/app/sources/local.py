@@ -58,21 +58,35 @@ class LocalStoreSource:
                 authoritative=True,
             )
 
-        covered = self._store.covers(str(citation.reporter), str(citation.volume))
-        if covered:
+        reporter, volume = str(citation.reporter), str(citation.volume)
+
+        if self._store.covers(reporter, volume):
             return LookupResult(
                 ExistenceStatus.NOT_FOUND,
                 detail=(
-                    f"We hold every case in {citation.reporter} volume "
-                    f"{citation.volume}, and this is not among them."
+                    f"We hold every case in {reporter} volume {volume}, "
+                    f"and this is not among them."
                 ),
                 authoritative=True,
+            )
+
+        # Holding part of a volume proves nothing about the rest of it. Saying
+        # so is less satisfying than a red verdict and is the only defensible
+        # answer.
+        if self._store.has_volume(reporter, volume):
+            return LookupResult(
+                ExistenceStatus.NOT_FOUND,
+                detail=(
+                    f"We hold only part of {reporter} volume {volume}, so we cannot "
+                    f"tell whether this case exists."
+                ),
+                authoritative=False,
             )
 
         return LookupResult(
             ExistenceStatus.NOT_FOUND,
             detail=(
-                f"We have not loaded {citation.reporter} volume {citation.volume}, "
+                f"We have not loaded {reporter} volume {volume}, "
                 f"so this citation could not be checked either way."
             ),
             authoritative=False,

@@ -22,7 +22,7 @@ SAMPLE = Path(__file__).resolve().parents[1] / "fixtures" / "cap_sample.jsonl"
 def corpus():
     store = Store(":memory:")
     embedder = LocalEmbedder()
-    load_cases(store, iter_records(SAMPLE))
+    load_cases(store, iter_records(SAMPLE), complete_volumes=True)
     for citation in ("42 F.3d 100", "58 F.3d 900", "91 F.3d 415"):
         from app.retrieval import index_opinion
 
@@ -51,6 +51,18 @@ async def test_miss_inside_a_covered_volume_is_authoritative(corpus):
     result = await LocalStoreSource(store).lookup(cite("See 42 F.3d 999."))
     assert result.status is ExistenceStatus.NOT_FOUND
     assert result.authoritative is True
+
+
+@pytest.mark.asyncio
+async def test_partial_volume_cannot_support_an_absence_claim():
+    """A volume we hold only part of must never produce a red verdict."""
+    store = Store(":memory:")
+    load_cases(store, iter_records(SAMPLE))  # no completeness assertion
+    result = await LocalStoreSource(store).lookup(cite("See 42 F.3d 999."))
+    assert result.status is ExistenceStatus.NOT_FOUND
+    assert result.authoritative is False
+    assert "only part of" in result.detail
+    store.close()
 
 
 @pytest.mark.asyncio

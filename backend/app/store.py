@@ -10,12 +10,77 @@ from __future__ import annotations
 
 import asyncio
 import sqlite3
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 
 _SCHEMA = Path(__file__).with_name("schema.sql")
+
+
+class _Rows:
+    """Already-fetched rows, standing in for a cursor.
+
+    Results are materialised inside the lock. A real sqlite3 cursor fetches
+    lazily from its connection, so handing one back would let a caller read
+    rows after the lock had been released - which is the race this class
+    exists to close.
+    """
+
+    __slots__ = ("_rows",)
+
+    def __init__(self, rows: list) -> None:
+        self._rows = rows
+
+    def fetchone(self):
+        return self._rows[0] if self._rows else None
+
+    def fetchall(self) -> list:
+        return self._rows
+
+    def __iter__(self):
+        return iter(self._rows)
+
+
+class _LockedConnection:
+    """Serialises access to one SQLite connection.
+
+    The store is reached from the event loop and from worker threads
+    (`asyncio.to_thread` in the audit pipeline). A sqlite3 connection is not
+    safe for concurrent use even with check_same_thread disabled: overlapping
+    statements produce "cannot commit transaction - SQL statements in
+    progress". Every statement and commit therefore goes through one
+    re-entrant lock.
+    """
+
+    def __init__(self, connection: sqlite3.Connection) -> None:
+        self._connection = connection
+        self._lock = threading.RLock()
+
+    def execute(self, sql: str, parameters=()) -> _Rows:
+        with self._lock:
+            cursor = self._connection.execute(sql, parameters)
+            try:
+                return _Rows(cursor.fetchall())
+            finally:
+                cursor.close()
+
+    def executemany(self, sql: str, seq) -> None:
+        with self._lock:
+            self._connection.executemany(sql, seq)
+
+    def executescript(self, sql: str) -> None:
+        with self._lock:
+            self._connection.executescript(sql)
+
+    def commit(self) -> None:
+        with self._lock:
+            self._connection.commit()
+
+    def close(self) -> None:
+        with self._lock:
+            self._connection.close()
 DEFAULT_DB = Path(__file__).resolve().parents[1] / "data" / "auditor.db"
 
 
@@ -45,8 +110,9 @@ class Store:
         self.path = Path(path)
         if self.path != Path(":memory:"):
             self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(str(self.path), check_same_thread=False)
-        self._conn.row_factory = sqlite3.Row
+        connection = sqlite3.connect(str(self.path), check_same_thread=False)
+        connection.row_factory = sqlite3.Row
+        self._conn = _LockedConnection(connection)
         self._conn.execute("PRAGMA foreign_keys = ON")
         self._conn.executescript(_SCHEMA.read_text())
         self._conn.commit()
@@ -211,24 +277,50 @@ class Store:
     # ---------------------------------------------------------- corpus coverage
 
     def record_coverage(
-        self, reporter: str, volume: str, source: str, case_count: int
+        self,
+        reporter: str,
+        volume: str,
+        source: str,
+        case_count: int,
+        complete: bool = False,
     ) -> None:
-        """Note that we hold a complete reporter volume."""
+        """Note cases held from a reporter volume.
+
+        `complete` must be asserted by the operator. A loader reading an
+        arbitrary slice cannot tell whether it has the whole volume, and
+        guessing yes would let the auditor call a real case fabricated.
+        """
         self._conn.execute(
-            """INSERT INTO corpus_coverage (reporter, volume, source, case_count)
-               VALUES (?, ?, ?, ?)
+            """INSERT INTO corpus_coverage (reporter, volume, source, case_count, complete)
+               VALUES (?, ?, ?, ?, ?)
                ON CONFLICT(reporter, volume) DO UPDATE SET
                    source = excluded.source,
                    case_count = excluded.case_count,
+                   -- completeness, once asserted, is not withdrawn by a later
+                   -- partial load of the same volume
+                   complete = MAX(corpus_coverage.complete, excluded.complete),
                    loaded_at = datetime('now')""",
-            (reporter, volume, source, case_count),
+            (reporter, volume, source, case_count, int(complete)),
         )
         self._conn.commit()
 
-    def covers(self, reporter: str, volume: str) -> bool:
-        """Whether a miss for this citation may be reported as 'no such case'."""
+    def has_volume(self, reporter: str, volume: str) -> bool:
+        """Whether we hold any cases at all from this reporter volume."""
         row = self._conn.execute(
             "SELECT 1 FROM corpus_coverage WHERE reporter = ? AND volume = ?",
+            (reporter, volume),
+        ).fetchone()
+        return row is not None
+
+    def covers(self, reporter: str, volume: str) -> bool:
+        """Whether a miss here may be reported as "no such case".
+
+        True only for volumes loaded in full. Anything else and absence is
+        evidence of nothing.
+        """
+        row = self._conn.execute(
+            "SELECT 1 FROM corpus_coverage "
+            "WHERE reporter = ? AND volume = ? AND complete = 1",
             (reporter, volume),
         ).fetchone()
         return row is not None
@@ -236,6 +328,7 @@ class Store:
     def coverage_summary(self) -> list[dict]:
         rows = self._conn.execute(
             """SELECT reporter, COUNT(*) AS volumes, SUM(case_count) AS cases,
+                      SUM(complete) AS complete_volumes,
                       MIN(volume) AS first_volume, MAX(volume) AS last_volume,
                       MIN(source) AS source
                FROM corpus_coverage GROUP BY reporter ORDER BY reporter"""
@@ -255,6 +348,51 @@ class Store:
             "SELECT 1 FROM opinions WHERE is_synthetic = 1 LIMIT 1"
         ).fetchone()
         return row is not None
+
+    # ------------------------------------------------- statistics for plausibility
+
+    @staticmethod
+    def _split_citation(citation: str) -> tuple[str, str, str] | None:
+        """Split "42 F.3d 100" into (volume, reporter, page).
+
+        Citation keys are built as "<volume> <reporter> <page>" by the ingest
+        layer, so splitting on the first and last space inverts that exactly -
+        including reporters with internal spaces such as "Cal. App. 4th".
+        """
+        parts = citation.strip().split(" ")
+        if len(parts) < 3:
+            return None
+        return parts[0], " ".join(parts[1:-1]), parts[-1]
+
+    def volume_year_samples(self, reporter: str) -> list[tuple[int, int]]:
+        """(volume, year) pairs held for this reporter, for the trend check."""
+        rows = self._conn.execute(
+            "SELECT citation, date_filed FROM opinions "
+            "WHERE date_filed IS NOT NULL AND date_filed != ''"
+        ).fetchall()
+
+        samples: list[tuple[int, int]] = []
+        for row in rows:
+            parsed = self._split_citation(row["citation"])
+            if parsed is None or parsed[1] != reporter:
+                continue
+            year = str(row["date_filed"])[:4]
+            if parsed[0].isdigit() and year.isdigit():
+                samples.append((int(parsed[0]), int(year)))
+        return samples
+
+    def max_page(self, reporter: str, volume: str) -> int | None:
+        """Highest page held in this reporter volume, or None if none is."""
+        rows = self._conn.execute(
+            "SELECT citation FROM opinions WHERE citation LIKE ?", (f"{volume} %",)
+        ).fetchall()
+
+        pages = []
+        for row in rows:
+            parsed = self._split_citation(row["citation"])
+            if parsed and parsed[0] == volume and parsed[1] == reporter and parsed[2].isdigit():
+                pages.append(int(parsed[2]))
+        return max(pages) if pages else None
 
     # ------------------------------------------------------------------- async
 
