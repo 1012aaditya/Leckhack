@@ -1,3 +1,22 @@
+"""Shared test fixtures.
+
+The test environment is configured BEFORE any app module is imported, because
+config caches both the settings and the store on first use. Without this the
+API tests read whatever database happens to be on the developer's disk - so
+loading a real corpus locally breaks the suite, which is a defect in the test
+setup rather than in the code under test.
+"""
+
+import os
+import tempfile
+from pathlib import Path
+
+_TEST_DB = Path(tempfile.mkdtemp(prefix="citation-auditor-tests-")) / "test.db"
+os.environ["DATABASE_PATH"] = str(_TEST_DB)
+os.environ["LOAD_DEMO_CORPUS_ON_START"] = "true"
+for _key in ("COURTLISTENER_TOKEN", "ANTHROPIC_API_KEY", "VOYAGE_API_KEY"):
+    os.environ[_key] = ""
+
 import pytest
 
 from app.demo_data import load_demo_corpus
