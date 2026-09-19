@@ -1,0 +1,45 @@
+{
+  "_comment": "Well-known real cases, for offline development and demos. A citation absent from this file returns NOT_FOUND from the fixture source - which is correct for a demo but is NOT evidence that a case is fabricated. Only the live CourtListener source can establish that.",
+  "531 U.S. 98": {
+    "case_name": "Bush v. Gore",
+    "court": "Supreme Court of the United States",
+    "date_filed": "2000-12-12",
+    "url": "https://www.courtlistener.com/opinion/118378/bush-v-gore/",
+    "opinion_id": 118378
+  },
+  "410 U.S. 113": {
+    "case_name": "Roe v. Wade",
+    "court": "Supreme Court of the United States",
+    "date_filed": "1973-01-22",
+    "url": "https://www.courtlistener.com/opinion/108713/roe-v-wade/",
+    "opinion_id": 108713
+  },
+  "347 U.S. 483": {
+    "case_name": "Brown v. Board of Education",
+    "court": "Supreme Court of the United States",
+    "date_filed": "1954-05-17",
+    "url": "https://www.courtlistener.com/opinion/105220/brown-v-board-of-education/",
+    "opinion_id": 105220
+  },
+  "384 U.S. 436": {
+    "case_name": "Miranda v. Arizona",
+    "court": "Supreme Court of the United States",
+    "date_filed": "1966-06-13",
+    "url": "https://www.courtlistener.com/opinion/107252/miranda-v-arizona/",
+    "opinion_id": 107252
+  },
+  "372 U.S. 335": {
+    "case_name": "Gideon v. Wainwright",
+    "court": "Supreme Court of the United States",
+    "date_filed": "1963-03-18",
+    "url": "https://www.courtlistener.com/opinion/106577/gideon-v-wainwright/",
+    "opinion_id": 106577
+  },
+  "5 U.S. 137": {
+    "case_name": "Marbury v. Madison",
+    "court": "Supreme Court of the United States",
+    "date_filed": "1803-02-24",
+    "url": "https://www.courtlistener.com/opinion/84759/marbury-v-madison/",
+    "opinion_id": 84759
+  }
+}

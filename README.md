@@ -3,13 +3,20 @@
 Working repository for a LexHack 2026 submission — a virtual student hackathon at the
 intersection of AI, law, and civic technology.
 
-**Current stage: planning.** The track and project are not yet chosen. No application
-code has been written.
+**Current stage: building.** Project chosen — the Citation Auditor, which checks whether
+the court cases in AI-generated legal text are real. The backend spine runs today without
+any API access, using an offline sample of real cases.
+
+```bash
+cd backend && pip install -r requirements-dev.txt
+python scripts/audit_cli.py "Bush v. Gore, 531 U.S. 98 (2000)."
+```
 
 ## Where things are
 
-| Document | Contents |
+| Path | Contents |
 |---|---|
+| [`backend/`](backend/) | The application. Runs offline; see [`backend/README.md`](backend/README.md). |
 | [`docs/idea-shortlist.md`](docs/idea-shortlist.md) | Researched, ranked shortlist of candidate projects across all five tracks, with impact evidence, data sources, demo plans, risks, and a recommendation. **Start here.** |
 | [`docs/tech-stack.md`](docs/tech-stack.md) | Proposed stack for the recommended project (Citation Auditor), with build order, risk register, and the alternate stacks for the two runner-up ideas. |
 | [`docs/features.md`](docs/features.md) | Plain-English description of what the tool does and who it helps. Doubles as Devpost submission copy. |
@@ -37,8 +44,10 @@ code has been written.
 
 **Team size:** up to 4 students.
 
-## Next step
+## Next steps
 
-Review the shortlist, pick a track and project, and answer the open questions in
-§7 of that document — jurisdiction, team composition, and build window all change
-the recommendation.
+- [ ] Get CourtListener API access (EDU membership is free — see `docs/data-sources.md`)
+- [ ] Run `backend/scripts/probe_courtlistener.py` to confirm the live response shape
+- [ ] Stage 2: does the cited case actually support the claim?
+- [ ] Stage 3: is the case still good law?
+- [ ] Frontend
