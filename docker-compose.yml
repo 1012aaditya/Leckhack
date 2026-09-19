@@ -1,0 +1,17 @@
+services:
+  auditor:
+    build: .
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      # Keeps a loaded corpus across rebuilds.
+      - auditor-data:/app/data
+    environment:
+      # All optional. Without them the app runs on its offline fallbacks.
+      COURTLISTENER_TOKEN: "${COURTLISTENER_TOKEN:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      VOYAGE_API_KEY: "${VOYAGE_API_KEY:-}"
+    restart: unless-stopped
+
+volumes:
+  auditor-data:

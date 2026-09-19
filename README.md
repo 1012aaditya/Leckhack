@@ -3,22 +3,57 @@
 Working repository for a LexHack 2026 submission — a virtual student hackathon at the
 intersection of AI, law, and civic technology.
 
-**Current stage: working software.** All three stages are built and tested. It runs with
+**Current stage: working software.** All four stages are built and tested. It runs with
 no credentials at all — every live component has a deterministic offline twin, so the
 demo cannot be broken by a dead venue wifi.
 
-```bash
-cd backend && pip install -r requirements-dev.txt
-uvicorn app.main:app --reload     # whole product, UI included, on one port
-```
+## Run it
 
-Then open <http://localhost:8000>. Or from the terminal:
+**One command.** It creates its own virtualenv, installs what it needs, and prints the URL:
 
 ```bash
-python scripts/audit_cli.py "A tenant may waive habitability, Alvarez v. Northgate, 42 F.3d 100 (1994)."
-python scripts/eval_run.py        # measured precision/recall
-pytest                            # 84 tests
+cd backend
+./run.sh
 ```
+
+Then open **<http://localhost:8000>**.
+
+Add the sample corpus if you want the fabrication checks to have something to work with:
+
+```bash
+./run.sh --demo-data
+```
+
+Other options: `PORT=9000 ./run.sh` if 8000 is taken.
+
+### With Docker instead
+
+```bash
+docker compose up --build
+```
+
+Also <http://localhost:8000>.
+
+### By hand
+
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload          # http://localhost:8000
+```
+
+Needs Python 3.10+. **No API keys required** — every live component has an offline
+fallback, so it runs and demos with nothing configured.
+
+### If it will not start
+
+| What you see | Cause |
+|---|---|
+| Nothing at localhost:8000 | The server has to be running in a terminal. `./run.sh` and leave it open. |
+| `Address already in use` | `PORT=8001 ./run.sh` |
+| `Could not import module "app.main"` | Run it from inside `backend/`, not the repo root. |
+| `command not found: uvicorn` | The virtualenv is not active. Use `./run.sh`, which handles it. |
 
 **What it does.** Paste in AI-generated legal text. For every case cited it answers four
 questions: *could* this citation exist at all, does the case exist, does the opinion
