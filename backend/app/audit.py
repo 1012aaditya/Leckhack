@@ -187,8 +187,9 @@ class Auditor:
 
         # Resolved. Now the harder questions.
         name = result.matches[0].case_name if result.matches else "this case"
+        # Case names often already end in a full stop ("Prop. Mgmt.").
+        parts = [f"Real case: {str(name).rstrip('.')}."]
         verdict = Verdict.GREEN
-        parts = [f"Real case: {name}."]
 
         if support is None:
             parts.append("We could not check whether it says what was claimed.")
