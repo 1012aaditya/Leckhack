@@ -139,22 +139,26 @@ class Auditor:
             detail = result.detail if result else ""
             return Verdict.UNKNOWN, detail or "Could not be checked.", notes
 
-        authoritative = getattr(self.source, "is_authoritative", False)
+        authoritative = result.authoritative
+        if authoritative is None:
+            authoritative = getattr(self.source, "is_authoritative", False)
 
         if result.status is ExistenceStatus.NOT_FOUND:
             if not authoritative:
                 return (
                     Verdict.UNKNOWN,
-                    "Not in the offline sample. Connect a live database to check this "
-                    "properly.",
+                    result.detail
+                    or "Not in the corpus we hold, so this could not be checked.",
                     notes,
                 )
-            return (
-                Verdict.RED,
-                "No case with this citation exists in a database of millions of "
-                "decisions. This looks fabricated.",
-                notes,
+            # Prefer the source's own words: a local corpus knows exactly what
+            # it covers, and claiming "a database of millions of decisions"
+            # while holding three would be the overclaiming this tool exists
+            # to catch.
+            reason = result.detail or (
+                "No case with this citation exists in the database checked."
             )
+            return Verdict.RED, f"{reason} This looks fabricated.", notes
 
         if result.status is ExistenceStatus.AMBIGUOUS:
             return Verdict.AMBER, "This citation matches more than one case.", notes
@@ -188,11 +192,8 @@ class Auditor:
         if good_law is not None and good_law.has_negative_treatment:
             verdict = _worst(verdict, Verdict.AMBER)
             parts.append("A later case appears to have undercut it.")
-        elif good_law is not None and good_law.checked and good_law.citing_count == 0:
-            notes.append(
-                "No later citing cases are held locally, so later treatment was not "
-                "checked."
-            )
+        # When citing_count is 0 the good-law summary already says so, and the
+        # UI renders that summary - a second note would just repeat it.
 
         return verdict, " ".join(parts), notes
 

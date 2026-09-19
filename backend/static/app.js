@@ -36,7 +36,17 @@ async function loadComponents() {
     box.replaceChildren(
       ...chips.map(([label, ok]) => el("span", `chip ${ok ? "ok" : "warn"}`, label))
     );
-    if (!c.database_authoritative) {
+
+    // Coverage is what licenses the tool to call a citation fabricated, so show it.
+    const coverage = c.corpus_coverage || [];
+    if (coverage.length) {
+      const volumes = coverage.reduce((n, r) => n + (r.volumes || 0), 0);
+      const reporters = coverage.map((r) => r.reporter).join(", ");
+      box.append(
+        el("span", "chip ok",
+           `corpus: ${c.corpus_opinions} opinions · ${volumes} volume(s) of ${reporters}`)
+      );
+    } else if (!c.database_authoritative) {
       box.append(
         el("span", "chip warn", "offline sample — cannot confirm fabrication")
       );

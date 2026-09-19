@@ -208,6 +208,42 @@ class Store:
         ).fetchall()
         return [self._to_opinion(r) for r in rows]
 
+    # ---------------------------------------------------------- corpus coverage
+
+    def record_coverage(
+        self, reporter: str, volume: str, source: str, case_count: int
+    ) -> None:
+        """Note that we hold a complete reporter volume."""
+        self._conn.execute(
+            """INSERT INTO corpus_coverage (reporter, volume, source, case_count)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(reporter, volume) DO UPDATE SET
+                   source = excluded.source,
+                   case_count = excluded.case_count,
+                   loaded_at = datetime('now')""",
+            (reporter, volume, source, case_count),
+        )
+        self._conn.commit()
+
+    def covers(self, reporter: str, volume: str) -> bool:
+        """Whether a miss for this citation may be reported as 'no such case'."""
+        row = self._conn.execute(
+            "SELECT 1 FROM corpus_coverage WHERE reporter = ? AND volume = ?",
+            (reporter, volume),
+        ).fetchone()
+        return row is not None
+
+    def coverage_summary(self) -> list[dict]:
+        rows = self._conn.execute(
+            """SELECT reporter, COUNT(*) AS volumes, SUM(case_count) AS cases,
+                      MIN(volume) AS first_volume, MAX(volume) AS last_volume
+               FROM corpus_coverage GROUP BY reporter ORDER BY reporter"""
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def opinion_count(self) -> int:
+        return self._conn.execute("SELECT COUNT(*) FROM opinions").fetchone()[0]
+
     # ------------------------------------------------------------------- async
 
     async def a(self, fn, *args, **kwargs):

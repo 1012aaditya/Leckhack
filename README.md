@@ -17,7 +17,7 @@ Then open <http://localhost:8000>. Or from the terminal:
 ```bash
 python scripts/audit_cli.py "A tenant may waive habitability, Alvarez v. Northgate, 42 F.3d 100 (1994)."
 python scripts/eval_run.py        # measured precision/recall
-pytest                            # 60 tests
+pytest                            # 84 tests
 ```
 
 **What it does.** Paste in AI-generated legal text. For every case cited it answers three
@@ -62,7 +62,7 @@ displayed.
 
 - [ ] Get CourtListener API access (EDU membership is free — see `docs/data-sources.md`)
 - [ ] Run `backend/scripts/probe_courtlistener.py` to confirm the live response shape
-- [ ] Load real Caselaw Access Project data, replacing the synthetic demo corpus
+- [ ] Download a CAP slice and run `backend/scripts/load_cap.py` (pipeline built and tested; only the download is left)
 - [ ] Re-run `eval_run.py` on real data — the current numbers are machinery, not a measurement
 - [ ] Add `ANTHROPIC_API_KEY` so stage 2 uses the model judge rather than word matching
 - [x] ~~Stage 2: does the cited case actually support the claim?~~

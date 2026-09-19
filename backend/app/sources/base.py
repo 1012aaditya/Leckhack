@@ -20,10 +20,18 @@ class LookupResult:
         status: ExistenceStatus,
         matches: list[CaseMatch] | None = None,
         detail: str = "",
+        authoritative: bool | None = None,
     ) -> None:
         self.status = status
         self.matches = matches or []
         self.detail = detail
+        self.authoritative = authoritative
+        """Whether THIS answer may be reported as "no such case".
+
+        Per result rather than per source, because a partial corpus can be
+        authoritative about one citation and silent about another: loading
+        F.3d volume 42 licenses "42 F.3d 999 does not exist", but says nothing
+        at all about 900 F.2d 1. None means fall back to the source default."""
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"LookupResult({self.status.value}, {len(self.matches)} matches)"

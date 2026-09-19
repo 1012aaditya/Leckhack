@@ -112,12 +112,63 @@ Pre-seed the cache with every case in the demo script, and record a backup video
 
 ---
 
+## Actually loading it
+
+The ingestion pipeline is built and tested — `backend/app/ingest/cap.py`, driven by
+`backend/scripts/load_cap.py`. Downloading the data is the only step left.
+
+```bash
+# 1. Get a slice. A reporter volume or two is plenty; do not pull all 6.4M cases.
+#    Hugging Face (easiest):  free-law/Caselaw_Access_Project
+#    or direct bulk files:    https://case.law/download/
+
+# 2. ALWAYS inspect before importing.
+python scripts/load_cap.py --inspect path/to/file.jsonl
+
+# 3. Import, building the retrieval index as it goes.
+python scripts/load_cap.py path/to/file.jsonl --reporter F.3d --index
+
+# 4. Citation graph for stage 3 (free bulk CSV, no API key).
+python scripts/load_citation_graph.py search_opinionscited.csv.gz
+```
+
+**`--inspect` is not ceremony.** CAP has shipped in at least three shapes — classic
+`casebody.data.opinions`, the 2024 static.case.law `casebody.opinions`, and flattened
+exports with a single `text` column. The parser handles all three, but it was written
+against documentation and fixtures rather than a verified live download. Inspect prints
+the keys it found and what it made of the first records, so a silent mis-parse is visible
+before it fills your database.
+
+### Coverage: why the tool can say "this case does not exist"
+
+A partial corpus cannot prove absence in general — but it can locally. The loader records
+which reporter volumes it holds completely, and the auditor uses that:
+
+| Citation | Held? | Verdict |
+|---|---|---|
+| `42 F.3d 100` | yes | **Real case** |
+| `42 F.3d 999` | no, but we hold all of F.3d vol 42 | **Fabricated** — authoritative |
+| `900 F.2d 1` | no, and we never loaded F.2d | **Not checked** — honest silence |
+
+That third row is what most tools get wrong. Reporting "not in our data" as "fake" would
+be exactly the overclaiming this project exists to catch.
+
+### Ordering with the live API
+
+With both a local corpus and a CourtListener token configured, lookups chain: the local
+store answers first (instant, free, unrateable), and the API is consulted only for
+citations we do not hold — which is also everything decided after CAP's 2020 cutoff. A
+long document then cannot burn the rate limit mid-demo.
+
+---
+
 ## Setup checklist (do before the weekend)
 
 - [ ] Create a CourtListener account, generate an API token
 - [ ] Apply for EDU membership — or email FLP if your student email is not `.edu`
-- [ ] Pull a CAP slice from Hugging Face; load into Postgres
-- [ ] Download `search_opinionscited` bulk CSV; `COPY FROM` into the same database
+- [ ] Pull a CAP slice from Hugging Face or case.law/download
+- [ ] `python scripts/load_cap.py --inspect FILE`, then import with `--index`
+- [ ] Download `search_opinionscited` bulk CSV; `python scripts/load_citation_graph.py FILE`
 - [ ] Check whether the prebuilt FAISS index is usable before building your own
 - [ ] Test the citation-lookup endpoint with a known-real and a known-fake citation
 - [ ] Credit CAP, Free Law Project and eyecite in the README

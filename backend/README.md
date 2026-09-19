@@ -24,7 +24,7 @@ Measure it:
 
 ```bash
 python scripts/eval_run.py         # precision/recall against labelled cases
-pytest                             # 60 tests
+pytest                             # 84 tests
 ```
 
 ## The three stages
@@ -60,6 +60,30 @@ reported as unchecked, never as fabrication.
 are counted separately, synthetic demo text is labelled as synthetic wherever it appears,
 and the offline fallback says it is weaker than the real check.
 
+## Loading real case law
+
+The synthetic demo corpus is a placeholder. To run on genuine Caselaw Access Project
+data (CC0, unrestricted since March 2024):
+
+```bash
+python scripts/load_cap.py --inspect path/to/cap.jsonl     # check the shape FIRST
+python scripts/load_cap.py path/to/cap.jsonl --index       # import + build the index
+python scripts/load_citation_graph.py opinions-cited.csv.gz  # stage 3
+```
+
+Handles CAP's classic `casebody.data.opinions`, the 2024 static.case.law
+`casebody.opinions`, and flattened single-`text`-column exports, from `.json`, `.jsonl`,
+`.gz`, `.zip`, `.tar.gz` or a directory tree. Records it cannot read are skipped rather
+than failing the import.
+
+Once real data is present it replaces the demo corpus automatically and becomes the
+primary source, with CourtListener chained after it for anything outside the slice.
+
+**Coverage decides what may be called fabricated.** The loader records which reporter
+volumes it holds completely. A missing citation inside a covered volume is reported as
+fabricated; one outside coverage is reported as unchecked. A partial corpus cannot prove
+a case does not exist, and the tool does not pretend otherwise.
+
 ## Turning on the live components
 
 | Key | Upgrades | Get it |
@@ -78,7 +102,9 @@ from a live call — confirm it against reality before trusting it.
 ```
 app/
   extract.py      stage 0  eyecite, offline, no model
-  sources/        stage 1  existence: fixtures.py offline, courtlistener.py live
+  ingest/         loaders  real CAP data and the CourtListener citation graph
+  sources/        stage 1  existence: local.py corpus, courtlistener.py live,
+                           fixtures.py demo, chain.py ordering
   retrieval.py    stage 2  chunking and passage search
   embeddings.py   stage 2  voyage-law-2, or deterministic local hashing
   judge.py        stage 2  claude-opus-5, or a lexical fallback; plus the guard

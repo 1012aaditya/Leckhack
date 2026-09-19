@@ -48,3 +48,19 @@ CREATE TABLE IF NOT EXISTS cites (
 );
 
 CREATE INDEX IF NOT EXISTS idx_cites_cited ON cites(cited_opinion_id);
+
+-- Which slices of a real corpus we actually hold.
+--
+-- This is what makes "no such case" a defensible statement. A partial corpus
+-- cannot prove absence: if we loaded F.3d volume 42 and someone cites 900 F.2d
+-- 1, silence means "we never loaded F.2d", not "that case is fabricated".
+-- Recording coverage per reporter volume lets the auditor tell those apart
+-- instead of guessing.
+CREATE TABLE IF NOT EXISTS corpus_coverage (
+    reporter   TEXT NOT NULL,
+    volume     TEXT NOT NULL,
+    source     TEXT NOT NULL,
+    case_count INTEGER NOT NULL DEFAULT 0,
+    loaded_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (reporter, volume)
+);
