@@ -91,7 +91,7 @@ chart, demo script, video. Freeze code by midday and rehearse against the cache.
 | Risk | Mitigation |
 |---|---|
 | **Stage 2 is the whole project and also the hardest part** | Scope to one well-covered jurisdiction if it slips. Stages 1 + 3 alone are a lookup script — protect day 2. |
-| **Live API dependency during the pitch** | Pre-seed the cache with every case in the demo script, and record a backup video. Never let the demo's success depend on a network call. |
+| **Live API dependency during the pitch** | Largely designed out — see [`data-sources.md`](data-sources.md). CAP bulk data and the CourtListener citation-graph CSV live in our own Postgres, so the demo runs offline. Still pre-seed the demo cases and record a backup video. |
 | **Rate limiting** | Far less severe than first assessed — see §6. Still: cache every opinion body on first fetch, and batch citations into single lookup requests (250 per request allowed). |
 | **The auditor's own errors** | The verbatim-quote substring check. Show a deliberately caught failure in the demo — it turns a weakness into evidence of rigour. |
 | **"Isn't this just a lookup?"** | Lead the demo with the Stage 2 case: a *real* citation used for a proposition the case never held. That is the failure mode Stage 1 cannot catch and the one that gets lawyers sanctioned. |
@@ -110,6 +110,15 @@ That is comfortably above anything a demo requires, so rate limiting drops from 
 risk to a routine engineering concern for this project. The 125/day limit still applies to
 fetching full opinion bodies, which is why the Postgres cache stays in the design. The
 shortlist has been updated to match.
+
+---
+
+## 6b. Getting the data
+
+Covered in full in [`data-sources.md`](data-sources.md). In short: Caselaw Access Project
+bulk data (CC0, unrestricted since March 2024) loaded locally, CourtListener's free bulk
+citation-graph CSV, and a free EDU membership for live API access. Almost none of it
+requires hitting an API during the demo.
 
 ---
 
