@@ -2,11 +2,13 @@
 
 const $ = (id) => document.getElementById(id);
 
+/* The fabricated citation deliberately sits inside a reporter volume the corpus
+   covers, so the tool can state it does not exist rather than shrugging. */
 const SAMPLE = `The implied warranty of habitability may be waived by agreement between \
 landlord and tenant, as the court explained in Alvarez v. Northgate Property Management, \
 42 F.3d 100 (1994). A landlord may not resort to self-help eviction, Whitfield v. Cedar \
-Ridge Apartments, 58 F.3d 900 (1995). The controlling authority remains Smith v. Nowhere, \
-999 U.S. 1234 (2022), which every court in the circuit has followed. Id. at 1240.`;
+Ridge Apartments, 58 F.3d 900 (1995). The controlling authority remains Sterling v. \
+Halloway, 42 F.3d 988 (1994), which every court in the circuit has followed. Id. at 991.`;
 
 const VERDICT = {
   green:   { label: "looks fine",  icon: "M4 12.5l5.5 5.5L20 7" },
@@ -61,6 +63,13 @@ async function loadComponents() {
       const reporters = coverage.map((r) => r.reporter).join(", ");
       box.append(el("span", "chip ok",
         `corpus: ${c.corpus_opinions} opinions · ${volumes} volume(s) of ${reporters}`));
+
+      // A corpus can be structurally real and still hold invented text. Say so
+      // rather than letting a green chip imply genuine case law.
+      if (c.corpus_is_synthetic) {
+        box.append(el("span", "chip warn",
+          "demo corpus — opinion text is invented, not real case law"));
+      }
     } else if (!c.database_authoritative) {
       box.append(el("span", "chip warn", "offline sample — cannot confirm fabrication"));
     }

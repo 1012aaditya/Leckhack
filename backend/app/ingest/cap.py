@@ -295,6 +295,7 @@ def load_cases(
     limit: int | None = None,
     reporter_filter: str | None = None,
     require_text: bool = True,
+    is_synthetic: bool = False,
     on_case=None,
 ) -> LoadStats:
     """Normalise and store CAP records.
@@ -302,6 +303,12 @@ def load_cases(
     `require_text` defaults to True because a case with no opinion body can be
     existence-checked but cannot answer stage 2, and silently filling the store
     with bodiless records would make "we hold this opinion" untrue.
+
+    `is_synthetic` marks a corpus whose text is invented - the format sample
+    shipped with this repo, for instance. It defaults to False because the
+    normal job is real CAP data, but it must be set for anything fictional:
+    the app labels synthetic opinions wherever it shows them, and mislabelling
+    invented cases as genuine is the exact failure this tool exists to catch.
     """
     stats = LoadStats()
     volume_counts: dict[tuple[str, str], int] = {}
@@ -328,7 +335,7 @@ def load_cases(
             court=case.court,
             date_filed=case.date_filed,
             url=case.url,
-            is_synthetic=False,
+            is_synthetic=is_synthetic,
             source=source,
         )
         stats.loaded += 1

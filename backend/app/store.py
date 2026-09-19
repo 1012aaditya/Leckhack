@@ -236,13 +236,25 @@ class Store:
     def coverage_summary(self) -> list[dict]:
         rows = self._conn.execute(
             """SELECT reporter, COUNT(*) AS volumes, SUM(case_count) AS cases,
-                      MIN(volume) AS first_volume, MAX(volume) AS last_volume
+                      MIN(volume) AS first_volume, MAX(volume) AS last_volume,
+                      MIN(source) AS source
                FROM corpus_coverage GROUP BY reporter ORDER BY reporter"""
         ).fetchall()
         return [dict(r) for r in rows]
 
     def opinion_count(self) -> int:
         return self._conn.execute("SELECT COUNT(*) FROM opinions").fetchone()[0]
+
+    def has_synthetic_corpus(self) -> bool:
+        """Whether any loaded opinion body is invented rather than a real record.
+
+        Surfaced in the UI: a corpus can be structurally real and still hold
+        fictional text, and a viewer must not have to guess which.
+        """
+        row = self._conn.execute(
+            "SELECT 1 FROM opinions WHERE is_synthetic = 1 LIMIT 1"
+        ).fetchone()
+        return row is not None
 
     # ------------------------------------------------------------------- async
 

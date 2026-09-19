@@ -149,3 +149,21 @@ def test_cases_without_text_are_skipped_by_default(db):
 def test_reporter_filter_and_limit(db):
     assert load_cases(db, iter_records(SAMPLE), reporter_filter="F.2d").loaded == 0
     assert load_cases(db, iter_records(SAMPLE), limit=2).loaded == 2
+
+
+def test_synthetic_corpus_is_marked_as_such(db):
+    """Invented text must never enter the corpus labelled as a real record.
+
+    The bundled sample is real CAP *format* with fictional content. Loading it
+    without the flag would put made-up cases in the store indistinguishable
+    from genuine ones - the exact failure this tool exists to catch, committed
+    by the tool itself.
+    """
+    load_cases(db, iter_records(SAMPLE), is_synthetic=True, source="sample")
+    assert db.get_opinion("42 F.3d 100").is_synthetic is True
+    assert db.has_synthetic_corpus() is True
+
+
+def test_real_load_is_not_marked_synthetic(db):
+    load_cases(db, iter_records(SAMPLE))
+    assert db.has_synthetic_corpus() is False

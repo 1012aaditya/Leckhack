@@ -65,7 +65,12 @@ def get_source(settings: Settings | None = None) -> CaseLawSource:
 
     store = get_store()
     if store.coverage_summary():
-        sources.append(LocalStoreSource(store, label="local CAP corpus"))
+        label = (
+            "local corpus (demo data)"
+            if store.has_synthetic_corpus()
+            else "local CAP corpus"
+        )
+        sources.append(LocalStoreSource(store, label=label))
 
     if settings.has_live_source:
         sources.append(
@@ -134,6 +139,7 @@ def describe_components(settings: Settings | None = None) -> dict:
         ),
         "corpus_opinions": store.opinion_count(),
         "corpus_coverage": coverage,
+        "corpus_is_synthetic": store.has_synthetic_corpus(),
         "judge": get_judge(settings).name,
         "judge_is_model_based": get_judge(settings).is_model_based,
         "embeddings": get_embedder(settings).name,

@@ -96,6 +96,9 @@ def main() -> int:
                         help="Build the retrieval index as cases load (slower; needed for stage 2).")
     parser.add_argument("--allow-missing-text", action="store_true",
                         help="Import cases with no opinion body. They cannot answer stage 2.")
+    parser.add_argument("--synthetic", action="store_true",
+                        help="Mark this corpus as invented text (use for the bundled "
+                             "format sample). The app then labels it everywhere it appears.")
     args = parser.parse_args()
 
     if not args.path.exists():
@@ -118,15 +121,20 @@ def main() -> int:
             print(f"    … {indexed} chunks indexed")
 
     print(f"\n  Loading from {args.path}")
+    if args.synthetic:
+        print("  Marked SYNTHETIC - the app will label this text as invented.")
     if embedder is not None:
         print(f"  Indexing with {embedder.name}")
 
     stats = load_cases(
         store,
         iter_records(args.path),
+        source=("caselaw-access-project (synthetic format sample)"
+                if args.synthetic else "caselaw-access-project"),
         limit=args.limit,
         reporter_filter=args.reporter,
         require_text=not args.allow_missing_text,
+        is_synthetic=args.synthetic,
         on_case=after_case,
     )
 
