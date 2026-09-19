@@ -3,57 +3,162 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Citation Auditor</title>
+<meta name="color-scheme" content="light">
+<title>Citation Auditor — check whether AI's legal citations are real</title>
+<meta name="description" content="Paste AI-generated legal text. We check whether every case is real, whether the opinion actually supports the claim, and whether it is still good law.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
 <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
-<header class="site">
-  <div class="wrap">
-    <h1>Citation&nbsp;Auditor</h1>
-    <p class="tagline">Paste anything an AI wrote about the law. We check whether the cases are real.</p>
-    <div id="components" class="components" aria-live="polite"></div>
+
+<a class="skip" href="#tool">Skip to the checker</a>
+
+<header class="topbar">
+  <div class="shell bar">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v18M7 7h10M6 7l-3 7h6zM18 7l-3 7h6z"/>
+        </svg>
+      </span>
+      <span class="brand-name">Citation Auditor</span>
+    </a>
+    <nav class="bar-nav">
+      <a href="#how">How it works</a>
+      <a href="#limits">Limits</a>
+      <a class="bar-cta" href="#tool">Check a citation</a>
+    </nav>
   </div>
 </header>
 
-<main class="wrap">
-  <section class="composer">
-    <label class="visually-hidden" for="input">Legal text to check</label>
-    <textarea id="input" rows="8" spellcheck="false"
-      placeholder="Paste AI-generated legal text here, including its case citations…"></textarea>
+<main>
 
-    <div class="controls">
-      <button id="check" class="primary">Check citations</button>
-      <button id="sample" class="ghost" type="button">Load an example</button>
-      <label class="ghost file">
-        Upload a PDF<input id="pdf" type="file" accept="application/pdf" hidden>
-      </label>
-      <span id="status" class="status" role="status" aria-live="polite"></span>
+  <section class="hero">
+    <div class="shell">
+      <p class="eyebrow">AI safety · Access to justice</p>
+      <h1>AI invents court cases.<br><span class="hl">We catch them.</span></h1>
+      <p class="lede">
+        Paste anything an AI wrote about the law. We check every case it cites — whether
+        the case exists, whether the opinion actually says what was claimed, and whether a
+        later court has overruled it.
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#tool">Check a citation</a>
+        <a class="btn quiet" href="#how">See how it works</a>
+      </div>
+
+      <dl class="stats">
+        <div class="stat">
+          <dt>17–33%</dt>
+          <dd>Hallucination rate of paid legal&nbsp;AI research tools<span class="src">Stanford RegLab</span></dd>
+        </div>
+        <div class="stat">
+          <dt>9M+</dt>
+          <dd>Court decisions we check&nbsp;against<span class="src">CourtListener · 2,000+ courts</span></dd>
+        </div>
+        <div class="stat">
+          <dt>90%+</dt>
+          <dd>Civil litigants with no&nbsp;lawyer, on many dockets<span class="src">US state courts</span></dd>
+        </div>
+      </dl>
     </div>
   </section>
 
-  <section id="results" class="results" hidden>
-    <div id="headline" class="headline"></div>
-    <ol id="list" class="list"></ol>
+  <section class="tool" id="tool">
+    <div class="shell">
+      <div class="card composer">
+        <div class="card-head">
+          <h2>Check a piece of legal text</h2>
+          <div id="components" class="chips" aria-live="polite"></div>
+        </div>
+
+        <label class="sr-only" for="input">Legal text to check</label>
+        <textarea id="input" rows="7" spellcheck="false"
+          placeholder="Paste AI-generated legal text here, including its case citations…"></textarea>
+
+        <div class="controls">
+          <button id="check" class="btn primary">Check citations</button>
+          <button id="sample" class="btn quiet" type="button">Load an example</button>
+          <label class="btn quiet file" tabindex="0" role="button">
+            Upload a PDF<input id="pdf" type="file" accept="application/pdf" hidden>
+          </label>
+          <span class="hint">⌘/Ctrl + Enter</span>
+          <span id="status" class="status" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <section id="results" class="results" hidden aria-live="polite">
+        <div id="headline" class="headline"></div>
+        <ol id="list" class="list"></ol>
+      </section>
+    </div>
   </section>
 
-  <section class="about">
-    <h2>How this works</h2>
-    <ol class="stages">
-      <li><strong>Does the case exist?</strong> A straight database lookup. No AI in this
-        step at all — whether a case exists is a fact, not a judgement.</li>
-      <li><strong>Does it actually say that?</strong> We read the opinion and check whether
-        it supports the claim made about it. A real case cited for something it never held
-        is the failure that slips past people.</li>
-      <li><strong>Is it still good law?</strong> We scan later cases for signs this one was
-        overruled. A warning signal, not a professional citator.</li>
-    </ol>
-    <p class="note"><strong>We check our own work.</strong> Every quote is confirmed to
-      appear word for word in the source opinion before it is shown. If it does not match,
-      the finding is discarded rather than displayed.</p>
-    <p class="note">This tool verifies citations. It does not give legal advice.</p>
+  <section class="how" id="how">
+    <div class="shell">
+      <h2 class="section-title">Three questions, in order</h2>
+      <div class="steps">
+        <article class="card step">
+          <span class="step-no">1</span>
+          <h3>Does this case exist?</h3>
+          <p>A straight database lookup against millions of real decisions. <strong>No AI
+            in this step at all</strong> — whether a case exists is a fact, not a
+            judgement, so we never let a model decide it.</p>
+        </article>
+        <article class="card step">
+          <span class="step-no">2</span>
+          <h3>Does it actually say that?</h3>
+          <p>The harder failure. A <em>real</em> case cited for something it never held
+            looks fine when you look it up. We read the opinion and check whether it
+            supports the claim.</p>
+        </article>
+        <article class="card step">
+          <span class="step-no">3</span>
+          <h3>Is it still good law?</h3>
+          <p>We follow the citation graph forward, looking for later courts that overruled
+            or undercut it. A warning signal — not a professional citator.</p>
+        </article>
+      </div>
+
+      <div class="card guarantee">
+        <h3>We check our own work</h3>
+        <p>An auditing tool that invents its findings is worse than no tool. So before any
+          quote is shown, the software confirms those words appear <strong>verbatim in the
+          source opinion</strong>. If they don't match, the finding is discarded rather
+          than displayed — the auditor is not allowed to assert what it cannot show.</p>
+      </div>
+    </div>
   </section>
+
+  <section class="limits" id="limits">
+    <div class="shell">
+      <h2 class="section-title">What this does not do</h2>
+      <ul class="limit-list">
+        <li><strong>It does not give legal advice.</strong> It checks whether citations are
+          accurate. Applying law to your situation is what lawyers are for.</li>
+        <li><strong>Step 3 is a signal, not a citator.</strong> There is no open Shepard's
+          or KeyCite. We scan later opinions for overruling language and say so plainly.</li>
+        <li><strong>Scanned PDFs need OCR</strong>, which this does not do. Text-based PDFs
+          are fine.</li>
+      </ul>
+    </div>
+  </section>
+
 </main>
+
+<footer class="footer">
+  <div class="shell foot">
+    <p class="foot-brand">Citation Auditor</p>
+    <p class="foot-note">
+      Built on open legal data: the
+      <a href="https://case.law/" target="_blank" rel="noopener noreferrer">Caselaw Access Project</a>,
+      <a href="https://www.courtlistener.com/" target="_blank" rel="noopener noreferrer">CourtListener</a>
+      and <a href="https://free.law/projects/eyecite/" target="_blank" rel="noopener noreferrer">eyecite</a>
+      from the Free Law Project.
+    </p>
+    <p class="foot-note">LexHack 2026 · AI Safety, Ethics &amp; Governance</p>
+  </div>
+</footer>
 
 <script src="/static/app.js"></script>
 </body>

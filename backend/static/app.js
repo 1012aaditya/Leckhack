@@ -38,7 +38,7 @@ async function loadComponents() {
     );
     if (!c.database_authoritative) {
       box.append(
-        el("span", "chip warn", "offline sample — cannot confirm a case is fabricated")
+        el("span", "chip warn", "offline sample — cannot confirm fabrication")
       );
     }
   } catch {
@@ -61,7 +61,7 @@ function renderItem(item, index) {
   const head = el("div", "head");
   head.append(el("span", "cite", item.citation.normalized || item.citation.raw));
   if (item.citation.case_name) {
-    head.append(el("span", "claim", item.citation.case_name));
+    head.append(el("span", "case-name", item.citation.case_name));
   }
   head.append(el("span", "badge", VERDICT_LABEL[item.verdict] || item.verdict));
   li.append(head);
@@ -111,7 +111,9 @@ function render(report) {
   );
 
   $("list").replaceChildren(...report.citations.map(renderItem));
-  $("results").hidden = false;
+  const results = $("results");
+  results.hidden = false;
+  results.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 async function send(url, options, pendingMessage) {
@@ -156,6 +158,14 @@ $("check").addEventListener("click", () => {
 $("sample").addEventListener("click", () => {
   $("input").value = SAMPLE;
   $("status").textContent = "";
+});
+
+// The PDF control is a styled <label>, so it needs keyboard activation of its own.
+document.querySelector(".file").addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    $("pdf").click();
+  }
 });
 
 $("pdf").addEventListener("change", (event) => {
