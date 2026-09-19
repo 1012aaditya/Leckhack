@@ -11,6 +11,7 @@ code has been written.
 | Document | Contents |
 |---|---|
 | [`docs/idea-shortlist.md`](docs/idea-shortlist.md) | Researched, ranked shortlist of candidate projects across all five tracks, with impact evidence, data sources, demo plans, risks, and a recommendation. **Start here.** |
+| [`docs/tech-stack.md`](docs/tech-stack.md) | Proposed stack for the recommended project (Citation Auditor), with build order, risk register, and the alternate stacks for the two runner-up ideas. |
 
 ## Hackathon brief (reference)
 

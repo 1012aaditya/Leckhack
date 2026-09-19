@@ -41,7 +41,7 @@ These are not optional caveats; they are design inputs, and stating them on stag
 
 **The speed/accuracy trade-off is counterintuitive.** Stanford's Justice Innovation work on legal-aid triage found that a tool 90% accurate but taking 20 minutes is *worse* than one 70% accurate taking 5 minutes plus 5 minutes of human review — because a fast human catches the errors. Build for human-in-the-loop throughput, not autonomous correctness, and say so.
 
-**Rate limits are a real hackathon risk.** CourtListener's default API allowance is **5 requests/minute, 50/hour, 125/day**. A live demo that hits it mid-pitch is a loss. Any project depending on it needs bulk data or an aggressive local cache built on day one — plan for this, do not discover it on Saturday night.
+**Rate limits need planning, but less than first thought.** CourtListener's *general* REST API allowance is **5 requests/minute, 50/hour, 125/day** — tight enough that fetching full opinion bodies needs a local cache built on day one. However, the dedicated **citation-lookup endpoint has its own, far more generous throttle: 60 valid citations per minute**, up to 250 citations per request. For a verification tool (idea #1) that is comfortably above demo requirements. See [`tech-stack.md`](tech-stack.md) §6.
 
 ---
 
@@ -79,9 +79,9 @@ Output is a per-citation verdict — green / amber / red — each linked to the 
 
 **The measurable claim.** Generate N legal answers from a public model, run your auditor over them, and report *your own* hallucination rate. You arrive with an empirical finding, not a product pitch — which is exactly what distinguished the winning submissions cited above.
 
-**Data:** CourtListener REST API v4 (9M+ decisions, 2,000+ courts) plus CAP bulk data (official state/federal case law through 2020). **Mitigate the 125/day rate limit with a pre-seeded local cache — this is the top build risk.**
+**Data:** CourtListener REST API v4 (9M+ decisions, 2,000+ courts) plus CAP bulk data (official state/federal case law through 2020). Citation extraction via **eyecite**, existence checks via the **citation-lookup endpoint** — which Free Law Project explicitly documents as a guardrail against hallucinated citations. Cache opinion bodies locally on first fetch. Full stack in [`tech-stack.md`](tech-stack.md).
 
-**Risks.** Stage 2 (support) is the hard part and the whole moat; stages 1 and 3 alone are a lookup script. Scope stage 2 to a single well-covered jurisdiction if time runs short. Say clearly that this is a *verification* tool, not advice — it sits cleanly outside UPL.
+**Risks.** Stage 2 (support) is the hard part and the whole moat; stages 1 and 3 alone are a lookup script. The auditor must not hallucinate its own findings — force every verdict to carry a verbatim quote and verify it is a literal substring of the source. Scope stage 2 to a single well-covered jurisdiction if time runs short. Say clearly that this is a *verification* tool, not advice — it sits cleanly outside UPL.
 
 ---
 
