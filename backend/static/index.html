@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Citation Auditor</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <h1>Citation&nbsp;Auditor</h1>
+    <p class="tagline">Paste anything an AI wrote about the law. We check whether the cases are real.</p>
+    <div id="components" class="components" aria-live="polite"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="composer">
+    <label class="visually-hidden" for="input">Legal text to check</label>
+    <textarea id="input" rows="8" spellcheck="false"
+      placeholder="Paste AI-generated legal text here, including its case citations…"></textarea>
+
+    <div class="controls">
+      <button id="check" class="primary">Check citations</button>
+      <button id="sample" class="ghost" type="button">Load an example</button>
+      <label class="ghost file">
+        Upload a PDF<input id="pdf" type="file" accept="application/pdf" hidden>
+      </label>
+      <span id="status" class="status" role="status" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section id="results" class="results" hidden>
+    <div id="headline" class="headline"></div>
+    <ol id="list" class="list"></ol>
+  </section>
+
+  <section class="about">
+    <h2>How this works</h2>
+    <ol class="stages">
+      <li><strong>Does the case exist?</strong> A straight database lookup. No AI in this
+        step at all — whether a case exists is a fact, not a judgement.</li>
+      <li><strong>Does it actually say that?</strong> We read the opinion and check whether
+        it supports the claim made about it. A real case cited for something it never held
+        is the failure that slips past people.</li>
+      <li><strong>Is it still good law?</strong> We scan later cases for signs this one was
+        overruled. A warning signal, not a professional citator.</li>
+    </ol>
+    <p class="note"><strong>We check our own work.</strong> Every quote is confirmed to
+      appear word for word in the source opinion before it is shown. If it does not match,
+      the finding is discarded rather than displayed.</p>
+    <p class="note">This tool verifies citations. It does not give legal advice.</p>
+  </section>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

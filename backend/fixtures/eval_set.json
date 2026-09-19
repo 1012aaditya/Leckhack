@@ -1,0 +1,54 @@
+{
+  "_comment": "Labelled cases for measuring the auditor. `existence` items test fabrication detection against the offline corpus. `stance` items test stage 2: whether the tool notices a real case being cited for something it did not hold. Replace with real citations once Caselaw Access Project data is loaded - the harness does not care where the labels come from.",
+  "existence": [
+    {"text": "See Bush v. Gore, 531 U.S. 98 (2000).", "label": "real"},
+    {"text": "See Roe v. Wade, 410 U.S. 113 (1973).", "label": "real"},
+    {"text": "See Brown v. Board of Education, 347 U.S. 483 (1954).", "label": "real"},
+    {"text": "See Gideon v. Wainwright, 372 U.S. 335 (1963).", "label": "real"},
+    {"text": "See Marbury v. Madison, 5 U.S. 137 (1803).", "label": "real"},
+    {"text": "See Alvarez v. Northgate Property Management, 42 F.3d 100 (1994).", "label": "real"},
+    {"text": "See Whitfield v. Cedar Ridge Apartments, 58 F.3d 900 (1995).", "label": "real"},
+    {"text": "See Smith v. Nowhere, 999 U.S. 1234 (2022).", "label": "fabricated"},
+    {"text": "See Hendricks v. Fictional Holdings, 812 U.S. 44 (2019).", "label": "fabricated"},
+    {"text": "See Imaginary v. Nonexistent, 640 F.3d 9999 (2015).", "label": "fabricated"},
+    {"text": "See Doe v. Invented Corp., 415 U.S. 9081 (2021).", "label": "fabricated"},
+    {"text": "See Placeholder v. Madeup, 77 U.S. 7777 (2018).", "label": "fabricated"}
+  ],
+  "stance": [
+    {
+      "text": "A residential tenant cannot contract away the implied warranty of habitability, Alvarez v. Northgate Property Management, 42 F.3d 100 (1994).",
+      "expected": "supports",
+      "note": "faithful statement of the holding"
+    },
+    {
+      "text": "A landlord may not resort to self-help eviction, Whitfield v. Cedar Ridge Apartments, 58 F.3d 900 (1995).",
+      "expected": "supports",
+      "note": "faithful statement of the holding"
+    },
+    {
+      "text": "A default judgment entered without valid service is void, Doe v. Riverside Collections, 91 F.3d 415 (1996).",
+      "expected": "supports",
+      "note": "faithful statement of the holding"
+    },
+    {
+      "text": "A landlord may change the locks without any court order, Whitfield v. Cedar Ridge Apartments, 58 F.3d 900 (1995).",
+      "expected": "not_supports",
+      "note": "real case, opposite of the holding"
+    },
+    {
+      "text": "A default judgment without valid service must be challenged within thirty days, Doe v. Riverside Collections, 91 F.3d 415 (1996).",
+      "expected": "not_supports",
+      "note": "real case, opposite of the holding"
+    },
+    {
+      "text": "The court held that federal income tax deductions require substantiation, Alvarez v. Northgate Property Management, 42 F.3d 100 (1994).",
+      "expected": "not_supports",
+      "note": "real case, entirely unrelated claim"
+    },
+    {
+      "text": "Commercial tenancies enjoy the same implied warranty as residential ones, Bellweather Housing Trust v. Solano, 77 F.3d 250 (1996).",
+      "expected": "not_supports",
+      "note": "real case, opposite of the holding"
+    }
+  ]
+}

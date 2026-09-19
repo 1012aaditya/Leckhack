@@ -85,14 +85,30 @@ class CaseMatch(BaseModel):
 
 
 class CitationReport(BaseModel):
-    """Everything known about one citation after the checks that have run."""
+    """Everything known about one citation after the checks that have run.
+
+    The three stages are kept separate rather than collapsed into the verdict,
+    so a reader can see which checks actually ran. "Real case, but we never
+    read the opinion" and "real case, and it says this" are different claims,
+    and the report should not blur them.
+    """
 
     citation: ExtractedCitation
+    claim: str = Field(
+        default="", description="The sentence in which the author used this citation."
+    )
     existence: ExistenceStatus = ExistenceStatus.UNCHECKED
     matches: list[CaseMatch] = Field(default_factory=list)
+    # Typed as dict rather than the concrete models to keep this module free of
+    # imports from judge/goodlaw, which would be circular.
+    support: dict | None = Field(default=None, description="Stage 2 finding, if run.")
+    good_law: dict | None = Field(default=None, description="Stage 3 report, if run.")
     verdict: Verdict = Verdict.UNKNOWN
     explanation: str = Field(
         default="", description="Plain-English sentence shown to the user."
+    )
+    notes: list[str] = Field(
+        default_factory=list, description="Caveats about what could not be checked."
     )
 
 

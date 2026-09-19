@@ -1,0 +1,41 @@
+{
+  "_comment": "SYNTHETIC DEMO OPINIONS. The case names are fictional and the body text was written for this project - it is NOT real court text. Every record loads with is_synthetic=1 and the app labels it wherever it is shown. This exists so stages 2 and 3 can be demonstrated before real Caselaw Access Project data is loaded; loading CAP replaces it with genuine opinions.",
+  "opinions": [
+    {
+      "citation": "42 F.3d 100",
+      "case_name": "Alvarez v. Northgate Property Management",
+      "court": "Demonstration Court of Appeals (fictional)",
+      "date_filed": "1994-03-11",
+      "is_synthetic": true,
+      "text": "Alvarez appeals the entry of judgment for her landlord following a summary eviction proceeding. The lease she signed contains a clause purporting to waive the implied warranty of habitability. The trial court gave that clause effect. We reverse. A residential tenant cannot contract away the implied warranty of habitability, and a lease clause purporting to waive it is void as against public policy. The landlord argues that Alvarez, having signed the lease, accepted the premises in their existing condition. That argument mistakes the nature of the warranty. The warranty does not arise from the bargain between the parties; it is imposed by law for the protection of tenants, and it therefore cannot be bargained away. We note that nothing in this opinion disturbs a landlord's right to recover for damage caused by a tenant. The judgment is reversed and the cause remanded for further proceedings."
+    },
+    {
+      "citation": "58 F.3d 900",
+      "case_name": "Whitfield v. Cedar Ridge Apartments",
+      "court": "Demonstration Court of Appeals (fictional)",
+      "date_filed": "1995-09-02",
+      "is_synthetic": true,
+      "text": "This appeal requires us to decide whether a landlord may recover possession without filing suit. Cedar Ridge changed the locks on Whitfield's unit while she was at work and removed her belongings to a storage facility. It did so without obtaining any court order. A landlord may not resort to self-help eviction; possession must be recovered through the judicial process. The statutory summary procedure exists precisely so that possession is not decided by whoever holds the keys. Cedar Ridge's contention that the lease authorised the lockout is unavailing, because parties cannot by agreement displace a procedure the legislature made mandatory. We affirm the award of damages to Whitfield."
+    },
+    {
+      "citation": "77 F.3d 250",
+      "case_name": "Bellweather Housing Trust v. Solano",
+      "court": "Demonstration Supreme Court (fictional)",
+      "date_filed": "1996-06-20",
+      "is_synthetic": true,
+      "text": "We granted review to reconsider the scope of the implied warranty of habitability in short-term commercial tenancies. Alvarez v. Northgate Property Management, 42 F.3d 100, is overruled to the extent it suggested the warranty applies outside the residential context. The reasoning in Alvarez rested on protections the legislature directed at residential tenants, and extending it to commercial leases finds no support in the statute. We emphasise that the residential holding of Alvarez is untouched; a residential tenant still cannot waive the warranty. The judgment below is vacated."
+    },
+    {
+      "citation": "91 F.3d 415",
+      "case_name": "Doe v. Riverside Collections",
+      "court": "Demonstration Court of Appeals (fictional)",
+      "date_filed": "1996-11-14",
+      "is_synthetic": true,
+      "text": "Riverside obtained a default judgment against Doe after serving process at an address Doe had not occupied for two years. Doe moved to vacate within thirty days of learning of the judgment. The trial court denied the motion as untimely. We reverse. A default judgment entered without valid service is void, and a void judgment may be attacked at any time. We follow Whitfield v. Cedar Ridge Apartments, 58 F.3d 900, in holding that procedures the legislature made mandatory cannot be treated as optional conveniences. The cause is remanded with instructions to vacate the judgment."
+    }
+  ],
+  "cites": [
+    {"citing": "77 F.3d 250", "cited": "42 F.3d 100"},
+    {"citing": "91 F.3d 415", "cited": "58 F.3d 900"}
+  ]
+}

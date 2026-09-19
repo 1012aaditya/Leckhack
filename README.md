@@ -3,14 +3,28 @@
 Working repository for a LexHack 2026 submission — a virtual student hackathon at the
 intersection of AI, law, and civic technology.
 
-**Current stage: building.** Project chosen — the Citation Auditor, which checks whether
-the court cases in AI-generated legal text are real. The backend spine runs today without
-any API access, using an offline sample of real cases.
+**Current stage: working software.** All three stages are built and tested. It runs with
+no credentials at all — every live component has a deterministic offline twin, so the
+demo cannot be broken by a dead venue wifi.
 
 ```bash
 cd backend && pip install -r requirements-dev.txt
-python scripts/audit_cli.py "Bush v. Gore, 531 U.S. 98 (2000)."
+uvicorn app.main:app --reload     # whole product, UI included, on one port
 ```
+
+Then open <http://localhost:8000>. Or from the terminal:
+
+```bash
+python scripts/audit_cli.py "A tenant may waive habitability, Alvarez v. Northgate, 42 F.3d 100 (1994)."
+python scripts/eval_run.py        # measured precision/recall
+pytest                            # 60 tests
+```
+
+**What it does.** Paste in AI-generated legal text. For every case cited it answers three
+questions: does this case exist, does the opinion actually support the claim made about
+it, and has a later case overruled it. Every quote shown is confirmed to appear verbatim
+in the source opinion — findings that fail that check are discarded rather than
+displayed.
 
 ## Where things are
 
@@ -48,6 +62,9 @@ python scripts/audit_cli.py "Bush v. Gore, 531 U.S. 98 (2000)."
 
 - [ ] Get CourtListener API access (EDU membership is free — see `docs/data-sources.md`)
 - [ ] Run `backend/scripts/probe_courtlistener.py` to confirm the live response shape
-- [ ] Stage 2: does the cited case actually support the claim?
-- [ ] Stage 3: is the case still good law?
-- [ ] Frontend
+- [ ] Load real Caselaw Access Project data, replacing the synthetic demo corpus
+- [ ] Re-run `eval_run.py` on real data — the current numbers are machinery, not a measurement
+- [ ] Add `ANTHROPIC_API_KEY` so stage 2 uses the model judge rather than word matching
+- [x] ~~Stage 2: does the cited case actually support the claim?~~
+- [x] ~~Stage 3: is the case still good law?~~
+- [x] ~~Frontend~~

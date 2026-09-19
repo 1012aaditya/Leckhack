@@ -1,77 +1,106 @@
 # Citation Auditor — backend
 
-Checks whether the court cases in AI-generated legal text are real.
+Checks whether the court cases in AI-generated legal text are real, whether they say
+what was claimed, and whether they are still good law.
 
-**Everything here runs without API access.** With no token configured it falls back to an
-offline sample of real cases, so the full pipeline works today and switching to the live
-database is a one-line config change.
+**It runs with no credentials.** Every live component has a deterministic offline twin,
+so the full three-stage pipeline works today and the demo cannot be broken by a dead
+venue wifi. Adding an API key upgrades a stage in place; it never switches the app on.
 
 ## Run it
 
 ```bash
 pip install -r requirements-dev.txt
-python scripts/audit_cli.py "Bush v. Gore, 531 U.S. 98 (2000). Smith v. Nowhere, 999 U.S. 1234 (2022)."
+uvicorn app.main:app --reload      # whole product, UI included, on one port
 ```
 
-Or as an HTTP service:
+Open <http://localhost:8000>, or use the command line:
 
 ```bash
-uvicorn app.main:app --reload
-curl -X POST localhost:8000/audit -H 'Content-Type: application/json' \
-  -d '{"text":"See Bush v. Gore, 531 U.S. 98 (2000)."}'
+python scripts/audit_cli.py "A tenant may waive habitability, Alvarez v. Northgate, 42 F.3d 100 (1994)."
 ```
 
-`GET /health` reports which database is in use.
-
-## Tests
+Measure it:
 
 ```bash
-pytest
+python scripts/eval_run.py         # precision/recall against labelled cases
+pytest                             # 60 tests
 ```
 
-## Turning on the live database
+## The three stages
 
-1. Get a CourtListener token (see [`../docs/data-sources.md`](../docs/data-sources.md) —
-   EDU membership is free for students).
-2. `cp .env.example .env` and fill in `COURTLISTENER_TOKEN`.
-3. Run `python scripts/probe_courtlistener.py` **first**. It dumps raw API responses for a
-   real, a fake, and a malformed citation. The response parsing in
-   `app/sources/courtlistener.py` was written from documentation rather than a live call,
-   so confirm it against reality before trusting it.
+| Stage | Question | Where |
+|---|---|---|
+| 1 | Does this case exist? | `app/sources/` |
+| 2 | Does the opinion actually support the claim? | `app/retrieval.py`, `app/judge.py` |
+| 3 | Has a later case overruled it? | `app/goodlaw.py` |
 
-Nothing else changes — `get_source()` picks the live database as soon as a token is present.
+Stage 1 alone is a working product — it catches outright fabrication. Stages 2 and 3
+are additive, and the report says plainly when they could not run.
 
-## How it is laid out
+## Four rules the code enforces
 
-| File | Job |
-|---|---|
-| `app/extract.py` | Stage 0. eyecite pulls citations out of text. Offline, no model. |
-| `app/sources/` | Stage 1. Does this case exist? `fixtures.py` offline, `courtlistener.py` live. |
-| `app/quote_guard.py` | The self-check. Rejects any quote not found verbatim in the source. |
-| `app/audit.py` | Orchestration, and the traffic-light decision. |
-| `app/models.py` | Shared data shapes and the report summary. |
-| `app/main.py` | HTTP surface. |
+**No model decides whether a case exists.** Stage 1 is a database lookup with nothing
+else in the path. Existence is a fact, not a judgement. A test pins the reason: eyecite
+accepts the fabricated `999 U.S. 1234` without complaint, because the *format* is valid.
+Only the lookup exposes it.
 
-## Three rules the code enforces
+**The auditor may not assert what it cannot show.** Every quote passes `quote_guard`,
+which confirms it appears verbatim in the source opinion — folding typographic and
+whitespace variants, never dropping words. A finding whose quote fails is downgraded to
+`unclear` and the quote discarded. `tests/test_judge.py` runs a deliberately fabricating
+judge through the pipeline to prove it gets blocked.
 
-**No model decides whether a case exists.** Stage 1 is a database lookup and nothing else.
-Existence is a fact, not a judgement. `app/extract.py` carries a test pinning the reason:
-a fabricated citation is well-formed, so extraction accepts `999 U.S. 1234` happily — only
-the lookup exposes it.
-
-**A non-authoritative source may never call a case fake.** The offline sample holds six
-cases; a miss means "not in our sample", not "fabricated". `CaseLawSource.is_authoritative`
-carries this, and `audit.py` checks it before showing a red light. A database outage is
+**A non-authoritative source may never call a case fake.** The offline corpus missing a
+citation means "not in our sample", not "fabricated". `CaseLawSource.is_authoritative`
+carries this and the pipeline checks it before showing a red light. A database outage is
 reported as unchecked, never as fabrication.
 
-**The report never claims more than it checked.** "Checked and fine" and "not checked" are
-counted separately, so the headline cannot say all citations passed when some were never
-verified.
+**The report never claims more than it checked.** "Checked and fine" and "not checked"
+are counted separately, synthetic demo text is labelled as synthetic wherever it appears,
+and the offline fallback says it is weaker than the real check.
 
-## Still to build
+## Turning on the live components
 
-- Stage 2 — does the case actually support the claim? (retrieval + judged verdict, guarded
-  by `quote_guard`)
-- Stage 3 — is it still good law? (citation graph from CourtListener bulk CSV)
-- Postgres cache so opinion text is local and the demo survives dead wifi
-- Frontend
+| Key | Upgrades | Get it |
+|---|---|---|
+| `COURTLISTENER_TOKEN` | Stage 1 → real database of 9M+ decisions | Free EDU membership, see [`../docs/data-sources.md`](../docs/data-sources.md) |
+| `ANTHROPIC_API_KEY` | Stage 2 → `claude-opus-5` instead of word matching | console.anthropic.com |
+| `VOYAGE_API_KEY` | Retrieval → `voyage-law-2` legal embeddings | voyageai.com |
+
+Run `python scripts/probe_courtlistener.py` **first** once you have a CourtListener
+token. It dumps raw responses for a real, a fabricated and a malformed citation. The
+response parsing in `app/sources/courtlistener.py` was written from documentation, not
+from a live call — confirm it against reality before trusting it.
+
+## Layout
+
+```
+app/
+  extract.py      stage 0  eyecite, offline, no model
+  sources/        stage 1  existence: fixtures.py offline, courtlistener.py live
+  retrieval.py    stage 2  chunking and passage search
+  embeddings.py   stage 2  voyage-law-2, or deterministic local hashing
+  judge.py        stage 2  claude-opus-5, or a lexical fallback; plus the guard
+  goodlaw.py      stage 3  citation-graph treatment scan
+  quote_guard.py           verbatim verification — the self-check
+  audit.py                 pipeline and verdict composition
+  store.py                 SQLite: opinions, chunks, vectors, citation graph
+  main.py                  API + serves the frontend
+static/                    zero-build single-page frontend
+fixtures/                  offline corpus and the labelled eval set
+scripts/                   CLI, eval harness, API probe
+```
+
+## Known limits
+
+- **The lexical fallback is weak.** It cannot separate "the lease contained a clause
+  purporting to waive X" from "X may be waived". It is deliberately conservative — it
+  returns `unclear` rather than guessing — but stage 2 only gets good with a model judge.
+- **Stage 3 is a signal, not a citator.** There is no open Shepard's or KeyCite. This
+  scans later opinions for overruling language and says so in the UI.
+- **The eval numbers are not yet a measurement.** Against the offline corpus,
+  "fabricated" only means "absent from a small fixture file", and the eval text was
+  written alongside the corpus it is scored on. The harness prints this warning itself.
+- **PDF support is text extraction only.** Scanned pages need OCR, which this does not do.
+- **The CourtListener response shape is unverified** — see the probe script above.

@@ -41,7 +41,7 @@ project. §7 at the bottom covers what changes if #2 or #4 is chosen instead.
 | **Embeddings** | **voyage-law-2** | Legal-domain model trained on 1T legal tokens. Leads MTEB legal retrieval; +6% over OpenAI v3-large across eight legal datasets, and 84.44 vs 68.40 NDCG@10 on long-context legal retrieval — which is the regime you are in, since opinions are long. A one-line swap that measurably improves the hard stage. |
 | **LLM** | **Claude** — `claude-sonnet-5` for extraction/classification, `claude-opus-5` for the Stage 2 judge | Judge quality is where accuracy is won; everything else is cheap and high-volume. Use tool-use / structured outputs to force schema-valid verdicts. |
 | **Database** | **Supabase** (Postgres + pgvector) | One service covers the opinion cache, embeddings, and audit-run history. Free tier is sufficient. Avoids standing up Redis or a separate vector DB for a weekend build. |
-| **Frontend** | **Next.js 15** (App Router) + Tailwind + shadcn/ui | Ships a credible-looking report UI fast. Stream verdicts in as they resolve so the demo has visible motion instead of a spinner. |
+| **Frontend** | ~~Next.js 15~~ → **zero-build single-page frontend served by FastAPI** | Changed during the build; see the note below. |
 | **Document input** | **PyMuPDF** | Briefs arrive as PDF. Text extraction only — no OCR needed, unlike shortlist #2. |
 | **Eval harness** | pytest + a script writing JSON results | This produces the measured hallucination rate that is the actual differentiator. Build it on day one, not the night before. |
 | **Deploy** | Vercel (frontend) + Fly.io or Render (API) + Supabase (DB) | Split deploy because the backend must be Python. |
@@ -110,6 +110,22 @@ That is comfortably above anything a demo requires, so rate limiting drops from 
 risk to a routine engineering concern for this project. The 125/day limit still applies to
 fetching full opinion bodies, which is why the Postgres cache stays in the design. The
 shortlist has been updated to match.
+
+---
+
+## 5b. Deviation from this plan: the frontend
+
+The build ships a plain HTML/CSS/JS frontend served directly by FastAPI, not Next.js.
+
+The report UI is a textarea, a list of results, traffic lights and expandable evidence.
+Next.js would add a build step, a second process, a second deployment and CORS — real
+risk, for no capability this page needs. With the static frontend, `uvicorn app.main:app`
+serves the entire product on one port: nothing to install at a venue, nothing to break
+between the demo and the judges.
+
+The API is clean and CORS is already configured for `localhost:3000`, so a Next.js front
+end can be added later without touching the backend. It just should not be a hackathon
+dependency.
 
 ---
 
