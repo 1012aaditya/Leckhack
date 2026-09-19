@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>Citation Auditor — check whether AI's legal citations are real</title>
+<title>Citation Auditor — is that case real?</title>
 <meta name="description" content="Paste AI-generated legal text. We check whether every case is real, whether the opinion actually supports the claim, and whether it is still good law.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231f5d4c'/><path d='M16 7v18M10 11h12M9 11l-3.2 7.4h6.4zM23 11l-3.2 7.4h6.4z' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
 <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
@@ -17,11 +17,11 @@
   <div class="shell bar">
     <a class="brand" href="/">
       <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3v18M7 7h10M6 7l-3 7h6zM18 7l-3 7h6z"/>
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 4v16M7 8h10M6 8l-2.4 5.6h4.8zM18 8l-2.4 5.6h4.8z"/>
         </svg>
       </span>
-      <span class="brand-name">Citation Auditor</span>
+      <span class="brand-name">Citation&nbsp;Auditor</span>
     </a>
     <nav class="bar-nav">
       <a href="#how">How it works</a>
@@ -34,31 +34,64 @@
 <main>
 
   <section class="hero">
-    <div class="shell">
-      <p class="eyebrow">AI safety · Access to justice</p>
-      <h1>AI invents court cases.<br><span class="hl">We catch them.</span></h1>
-      <p class="lede">
-        Paste anything an AI wrote about the law. We check every case it cites — whether
-        the case exists, whether the opinion actually says what was claimed, and whether a
-        later court has overruled it.
-      </p>
-      <div class="hero-actions">
-        <a class="btn primary" href="#tool">Check a citation</a>
-        <a class="btn quiet" href="#how">See how it works</a>
+    <div class="shell hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot"></span> AI Safety &middot; Access to Justice</p>
+        <h1>AI invents<br>court cases.<br><span class="hl">We catch them.</span></h1>
+        <p class="lede">
+          Paste anything an AI wrote about the law. We check every case it cites — whether
+          the case is real, whether the opinion actually says what was claimed, and whether
+          a later court has overruled it.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary lg" href="#tool">Check a citation
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="btn quiet lg" href="#how">See how it works</a>
+        </div>
       </div>
 
+      <div class="hero-art" aria-hidden="true">
+        <div class="doc-card">
+          <div class="doc-head"><span></span><span></span><span></span></div>
+          <p class="doc-line">The implied warranty may be waived by agreement,</p>
+          <p class="doc-line"><mark class="m-ok">Alvarez v. Northgate, 42 F.3d 100</mark>. A landlord</p>
+          <p class="doc-line">may not use self-help eviction,</p>
+          <p class="doc-line"><mark class="m-warn">Whitfield v. Cedar Ridge, 58 F.3d 900</mark>.</p>
+          <p class="doc-line">The controlling authority remains</p>
+          <p class="doc-line"><mark class="m-bad">Smith v. Nowhere, 999 U.S. 1234</mark>.</p>
+        </div>
+        <div class="verdict-chip v-ok">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 7"/></svg>
+          Real case
+        </div>
+        <div class="verdict-chip v-warn">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+          Says the opposite
+        </div>
+        <div class="verdict-chip v-bad">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10M17 7L7 17"/></svg>
+          No such case
+        </div>
+      </div>
+    </div>
+
+    <div class="shell">
       <dl class="stats">
         <div class="stat">
           <dt>17–33%</dt>
-          <dd>Hallucination rate of paid legal&nbsp;AI research tools<span class="src">Stanford RegLab</span></dd>
+          <dd>Hallucination rate of paid legal AI research tools</dd>
+          <dd class="src">Stanford RegLab</dd>
         </div>
         <div class="stat">
           <dt>9M+</dt>
-          <dd>Court decisions we check&nbsp;against<span class="src">CourtListener · 2,000+ courts</span></dd>
+          <dd>Court decisions available to check against</dd>
+          <dd class="src">CourtListener · 2,000+ courts</dd>
         </div>
         <div class="stat">
           <dt>90%+</dt>
-          <dd>Civil litigants with no&nbsp;lawyer, on many dockets<span class="src">US state courts</span></dd>
+          <dd>Civil litigants with no lawyer, on many dockets</dd>
+          <dd class="src">US state courts</dd>
         </div>
       </dl>
     </div>
@@ -77,7 +110,10 @@
           placeholder="Paste AI-generated legal text here, including its case citations…"></textarea>
 
         <div class="controls">
-          <button id="check" class="btn primary">Check citations</button>
+          <button id="check" class="btn primary">
+            <span class="btn-label">Check citations</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
           <button id="sample" class="btn quiet" type="button">Load an example</button>
           <label class="btn quiet file" tabindex="0" role="button">
             Upload a PDF<input id="pdf" type="file" accept="application/pdf" hidden>
@@ -96,50 +132,71 @@
 
   <section class="how" id="how">
     <div class="shell">
-      <h2 class="section-title">Three questions, in order</h2>
+      <p class="kicker">How it works</p>
+      <h2 class="section-title">Three questions, asked in order</h2>
+
       <div class="steps">
         <article class="card step">
-          <span class="step-no">1</span>
+          <span class="step-no">01</span>
           <h3>Does this case exist?</h3>
-          <p>A straight database lookup against millions of real decisions. <strong>No AI
-            in this step at all</strong> — whether a case exists is a fact, not a
-            judgement, so we never let a model decide it.</p>
+          <p>A straight database lookup against millions of real decisions.
+            <strong>No AI in this step at all</strong> — whether a case exists is a fact,
+            not a judgement, so we never let a model decide it.</p>
         </article>
         <article class="card step">
-          <span class="step-no">2</span>
+          <span class="step-no">02</span>
           <h3>Does it actually say that?</h3>
           <p>The harder failure. A <em>real</em> case cited for something it never held
-            looks fine when you look it up. We read the opinion and check whether it
-            supports the claim.</p>
+            looks perfectly fine when you look it up. We read the opinion and check whether
+            it supports the claim.</p>
         </article>
         <article class="card step">
-          <span class="step-no">3</span>
+          <span class="step-no">03</span>
           <h3>Is it still good law?</h3>
           <p>We follow the citation graph forward, looking for later courts that overruled
             or undercut it. A warning signal — not a professional citator.</p>
         </article>
       </div>
 
-      <div class="card guarantee">
-        <h3>We check our own work</h3>
-        <p>An auditing tool that invents its findings is worse than no tool. So before any
-          quote is shown, the software confirms those words appear <strong>verbatim in the
-          source opinion</strong>. If they don't match, the finding is discarded rather
-          than displayed — the auditor is not allowed to assert what it cannot show.</p>
+      <div class="guarantee">
+        <div class="guarantee-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l7.5 3v6c0 4.6-3.1 8.2-7.5 9.4C7.6 20.2 4.5 16.6 4.5 12V6z"/>
+            <path d="M9 12.2l2.2 2.2L15.5 10"/>
+          </svg>
+        </div>
+        <div>
+          <h3>We check our own work</h3>
+          <p>An auditing tool that invents its findings is worse than no tool. So before
+            any quote is shown, the software confirms those words appear <strong>verbatim
+            in the source opinion</strong>. If they don't match, the finding is discarded
+            rather than displayed — the auditor is not allowed to assert what it cannot
+            show.</p>
+        </div>
       </div>
     </div>
   </section>
 
   <section class="limits" id="limits">
     <div class="shell">
+      <p class="kicker">Honest limits</p>
       <h2 class="section-title">What this does not do</h2>
       <ul class="limit-list">
-        <li><strong>It does not give legal advice.</strong> It checks whether citations are
-          accurate. Applying law to your situation is what lawyers are for.</li>
-        <li><strong>Step 3 is a signal, not a citator.</strong> There is no open Shepard's
-          or KeyCite. We scan later opinions for overruling language and say so plainly.</li>
-        <li><strong>Scanned PDFs need OCR</strong>, which this does not do. Text-based PDFs
-          are fine.</li>
+        <li>
+          <h4>It does not give legal advice</h4>
+          <p>It checks whether citations are accurate. Applying law to your situation is
+            what lawyers are for.</p>
+        </li>
+        <li>
+          <h4>Step 3 is a signal, not a citator</h4>
+          <p>There is no open Shepard's or KeyCite. We scan later opinions for overruling
+            language and say so plainly.</p>
+        </li>
+        <li>
+          <h4>A partial corpus cannot prove absence</h4>
+          <p>We track which reporter volumes we hold completely. Outside them, a missing
+            case is reported as unchecked — never as fabricated.</p>
+        </li>
       </ul>
     </div>
   </section>
@@ -148,15 +205,17 @@
 
 <footer class="footer">
   <div class="shell foot">
-    <p class="foot-brand">Citation Auditor</p>
-    <p class="foot-note">
-      Built on open legal data: the
+    <div>
+      <p class="foot-brand">Citation Auditor</p>
+      <p class="foot-note">LexHack 2026 · AI Safety, Ethics &amp; Governance</p>
+    </div>
+    <p class="foot-note credits">
+      Built on open legal data:
       <a href="https://case.law/" target="_blank" rel="noopener noreferrer">Caselaw Access Project</a>,
       <a href="https://www.courtlistener.com/" target="_blank" rel="noopener noreferrer">CourtListener</a>
       and <a href="https://free.law/projects/eyecite/" target="_blank" rel="noopener noreferrer">eyecite</a>
       from the Free Law Project.
     </p>
-    <p class="foot-note">LexHack 2026 · AI Safety, Ethics &amp; Governance</p>
   </div>
 </footer>
 
